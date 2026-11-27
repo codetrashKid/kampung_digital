@@ -96,7 +96,7 @@ Buka `/admin` (tautan "Masuk pengurus" ada di footer). Yang bisa dikelola: **usa
 
 ## Aplikasi mobile (Flutter)
 
-Butuh [Flutter SDK](https://docs.flutter.dev/get-started/install) (channel stable). Folder `android/` dan `ios/` tidak disimpan di git; dibuat oleh skrip:
+Butuh [Flutter SDK](https://docs.flutter.dev/get-started/install) (channel stable, minimal 3.47 karena memakai paket `material_ui`). Folder `android/` dan `ios/` tidak disimpan di git; dibuat oleh skrip:
 
 ```bash
 cd mobile
