@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -7,8 +8,11 @@ import '../models/update_status.dart';
 
 /// Kesalahan saat memanggil API, dengan pesan yang aman ditampilkan ke warga.
 class ApiException implements Exception {
-  const ApiException(this.message);
+  const ApiException(this.message, {this.detail});
   final String message;
+
+  /// Keterangan teknis untuk membantu mencari penyebab (alamat server dan jenis kegagalan). Bukan rahasia.
+  final String? detail;
 
   @override
   String toString() => message;
@@ -40,13 +44,15 @@ class ApiClient {
     final http.Response res;
     try {
       res = await _http.get(uri).timeout(const Duration(seconds: 15));
-    } catch (_) {
-      throw const ApiException(
-          'Tidak dapat terhubung ke server. Periksa koneksi internet.');
+    } catch (e) {
+      throw ApiException(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet.',
+        detail: _describe(e),
+      );
     }
 
     if (res.statusCode != 200) {
-      throw ApiException(_errorMessage(res));
+      throw ApiException(_errorMessage(res), detail: '$baseUrl (kode ${res.statusCode})');
     }
     try {
       final body =
@@ -68,8 +74,8 @@ class ApiClient {
     final http.Response res;
     try {
       res = await _http.get(uri).timeout(const Duration(seconds: 6));
-    } catch (_) {
-      throw const ApiException('Tidak dapat memeriksa pembaruan.');
+    } catch (e) {
+      throw ApiException('Tidak dapat memeriksa pembaruan.', detail: _describe(e));
     }
     if (res.statusCode != 200) throw ApiException(_errorMessage(res));
     try {
@@ -78,6 +84,15 @@ class ApiClient {
     } catch (_) {
       throw const ApiException('Respons server tidak dapat dibaca.');
     }
+  }
+
+  /// Alamat server + jenis kegagalan, mis. "https://x.vercel.app: waktu habis".
+  String _describe(Object e) {
+    final what = e is TimeoutException
+        ? 'waktu habis'
+        : e.toString().replaceFirst('ClientException: ', '').replaceFirst('Exception: ', '');
+    final text = what.length > 140 ? '${what.substring(0, 140)}…' : what;
+    return '$baseUrl: $text';
   }
 
   String _errorMessage(http.Response res) {

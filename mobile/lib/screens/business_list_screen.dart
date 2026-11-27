@@ -69,8 +69,10 @@ class _BusinessListScreenState extends State<BusinessListScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
+                  final error = snapshot.error;
                   return _ErrorView(
-                    message: snapshot.error.toString(),
+                    message: error.toString(),
+                    detail: error is ApiException ? error.detail : null,
                     onRetry: _search,
                   );
                 }
@@ -130,9 +132,10 @@ class _BusinessTile extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({required this.message, required this.onRetry, this.detail});
 
   final String message;
+  final String? detail;
   final VoidCallback onRetry;
 
   @override
@@ -146,6 +149,14 @@ class _ErrorView extends StatelessWidget {
             Text(message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 18)),
+            if (detail != null) ...[
+              const SizedBox(height: 12),
+              SelectableText(
+                detail!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Colors.black54),
+              ),
+            ],
             const SizedBox(height: 16),
             FilledButton(onPressed: onRetry, child: const Text('Coba lagi')),
           ],

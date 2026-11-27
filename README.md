@@ -144,6 +144,7 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000   # emulator Android
 ```
 
 - Alamat API diatur lewat `API_BASE_URL` (bawaan `http://10.0.2.2:3000`). Untuk build rilis, isi variabel repositori GitHub `API_BASE_URL` (Settings > Secrets and variables > Actions > Variables) dengan alamat Vercel Anda.
+- **Aplikasi "tidak dapat terhubung ke server"?** Layar error menampilkan alamat yang dipakai dan penyebabnya. Pastikan variabel GitHub `API_BASE_URL` berisi alamat Vercel (https, tanpa `/api/v1`) *sebelum* build, lalu buka `<alamat>/api/v1/health` di browser HP: harus berisi `"database":"terhubung"`. APK lama tidak ikut berubah, jadi bangun ulang setelah mengisi variabel.
 - **GitHub Actions** (`.github/workflows/mobile.yml`): setiap perubahan di `mobile/` menjalankan analyze + test, lalu membangun APK Android (di Linux) dan iOS (di macOS). Hasilnya diunduh dari tab *Actions > Artifacts*.
 - APK rilis masih ditandatangani kunci debug dan build iOS memakai `--no-codesign`. Untuk Play Store / App Store perlu keystore dan sertifikat Apple Developer (belum disiapkan).
 

@@ -10,7 +10,8 @@ on:
 
 env:
   # Alamat API untuk build rilis. Atur di Settings > Secrets and variables > Actions > Variables.
-  API_BASE_URL: ${{ vars.API_BASE_URL || 'https://example.invalid' }}
+  # Sengaja tanpa nilai bawaan: build Android/iOS gagal jelas bila kosong (lihat langkah "Pastikan API_BASE_URL terisi").
+  API_BASE_URL: ${{ vars.API_BASE_URL }}
   # Nomor build = nomor run workflow (selalu naik). Dipakai aplikasi untuk cek "update wajib"
   # dan harus diisikan ke Panel Admin > Rilis aplikasi saat menerbitkan rilis.
   BUILD_NUMBER: ${{ github.run_number }}
@@ -45,6 +46,16 @@ jobs:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+      - name: Pastikan API_BASE_URL terisi
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "::error title=API_BASE_URL kosong::Isi variabel repositori API_BASE_URL (Settings > Secrets and variables > Actions > Variables) dengan alamat Vercel, mis. https://nama-proyek.vercel.app, lalu jalankan ulang workflow."
+            exit 1
+          fi
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "::error title=API_BASE_URL harus https::Nilai saat ini bukan alamat https. Build rilis wajib https agar sandi dan data warga tidak bisa disadap di jaringan."; exit 1 ;;
+          esac
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -101,6 +112,16 @@ jobs:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+      - name: Pastikan API_BASE_URL terisi
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "::error title=API_BASE_URL kosong::Isi variabel repositori API_BASE_URL (Settings > Secrets and variables > Actions > Variables) dengan alamat Vercel, mis. https://nama-proyek.vercel.app, lalu jalankan ulang workflow."
+            exit 1
+          fi
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "::error title=API_BASE_URL harus https::Nilai saat ini bukan alamat https. Build rilis wajib https agar sandi dan data warga tidak bisa disadap di jaringan."; exit 1 ;;
+          esac
       - uses: subosito/flutter-action@v2
         with:
           channel: stable

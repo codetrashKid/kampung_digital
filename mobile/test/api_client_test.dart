@@ -98,6 +98,22 @@ void main() {
     );
   });
 
+  test('error jaringan menyertakan alamat server dan penyebab di detail', () async {
+    final api = _clientWith((req) async => throw http.ClientException("Failed host lookup: 'example.invalid'"));
+    await expectLater(
+      api.listBusinesses(),
+      throwsA(isA<ApiException>().having((e) => e.detail, 'detail', allOf(contains('http://test'), contains('example.invalid')))),
+    );
+  });
+
+  test('status bukan 200 menyertakan kode di detail', () async {
+    final api = _clientWith((req) async => http.Response('boom', 502));
+    await expectLater(
+      api.listBusinesses(),
+      throwsA(isA<ApiException>().having((e) => e.detail, 'detail', contains('502'))),
+    );
+  });
+
   test('error jaringan menjadi ApiException', () async {
     final api = _clientWith((req) async => throw http.ClientException('x'));
     expect(
