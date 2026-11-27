@@ -33,6 +33,7 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Unit test baru: sandi, sesi, validasi, otorisasi, format (total 62 tes web).
 
 ### Diperbaiki
+- Workflow `mobile.yml` tidak valid YAML (baris pembaca versi memuat `version: ` di teks biasa) sehingga GitHub menolak menjalankannya; diganti blok skrip `run: |`. Kedua workflow kini divalidasi dengan parser YAML sebelum di-commit.
 - Pesan "Database belum siap" kini menampilkan **penyebab asli dan petunjuk perbaikan** saat mode pengembangan (mis. pool sesi Supabase penuh, sandi salah, tabel belum ada), dan `/api/v1/health` menyertakan `detail` di mode pengembangan; di produksi tetap pesan umum (detail ada di log). Tes ditambahkan (total 83).
 - Koneksi database gagal (`EMAXCONNSESSION`) bila memakai Supabase Session pooler port 5432: dokumentasi kini menyarankan Transaction pooler port 6543; skrip `db:migrate`, `db:seed`, dan `admin:create` memakai `prepare: false` agar kompatibel dengan pooler tersebut.
 

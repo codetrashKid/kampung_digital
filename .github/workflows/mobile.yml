@@ -55,7 +55,9 @@ jobs:
           cache: true
       - name: Baca nama versi dari pubspec.yaml
         id: ver
-        run: echo "name=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
       - name: Siapkan platform dan tanda tangan rilis
         run: bash tool/prepare_platforms.sh
         env:
@@ -105,7 +107,9 @@ jobs:
           cache: true
       - name: Baca nama versi dari pubspec.yaml
         id: ver
-        run: echo "name=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
       - run: bash tool/prepare_platforms.sh
       - run: flutter pub get
       - name: Build iOS
