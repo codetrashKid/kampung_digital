@@ -78,7 +78,7 @@ if (password.length < 10) {
   process.exit(1);
 }
 
-const sql = postgres(url, { max: 1, onnotice: () => {} });
+const sql = postgres(url, { max: 1, prepare: false, onnotice: () => {} });
 try {
   const [community] = await sql`select id from communities where slug = ${slug} and deleted_at is null`;
   if (!community) throw new Error(`Lingkungan "${slug}" tidak ditemukan. Jalankan npm run db:seed dulu.`);

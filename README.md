@@ -118,7 +118,7 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000   # emulator Android
 
 | Variabel | Nilai |
 |---|---|
-| `DATABASE_URL` | Connection string database. Supabase: **Transaction pooler** (port 6543), sandi di-URL-encode |
+| `DATABASE_URL` | Connection string database. Supabase: **Transaction pooler** (port **6543**, bukan 5432 yang cepat penuh), sandi di-URL-encode |
 | `DEFAULT_COMMUNITY_SLUG` | Slug lingkungan, mis. `contoh-kampung` |
 | `AUTH_SECRET` | Kunci acak minimal 32 karakter, **buat yang baru untuk produksi** (jangan pakai milik lokal) |
 

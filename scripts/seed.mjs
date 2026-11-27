@@ -10,7 +10,7 @@ if (!url) {
   process.exit(1);
 }
 
-const sql = postgres(url, { max: 1, onnotice: () => {} });
+const sql = postgres(url, { max: 1, prepare: false, onnotice: () => {} });
 
 try {
   const text = await readFile(path.join(process.cwd(), "db", "seed.sql"), "utf8");

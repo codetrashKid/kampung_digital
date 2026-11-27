@@ -22,6 +22,9 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Agenda tampil di beranda; kategori dengan jumlah usaha; favicon.
 - Unit test baru: sandi, sesi, validasi, otorisasi, format (total 62 tes web).
 
+### Diperbaiki
+- Koneksi database gagal (`EMAXCONNSESSION`) bila memakai Supabase Session pooler port 5432: dokumentasi kini menyarankan Transaction pooler port 6543; skrip `db:migrate`, `db:seed`, dan `admin:create` memakai `prepare: false` agar kompatibel dengan pooler tersebut.
+
 ### Diubah
 - Deploy: `vercel.json` (region fungsi `hnd1`/Tokyo, dekat database Supabase), panduan environment variable Vercel (`DATABASE_URL`, `DEFAULT_COMMUNITY_SLUG`, `AUTH_SECRET`) di README dan panduan pemula.
 - Mobile: `ApiClient` membuang garis miring di akhir `API_BASE_URL` (mencegah alamat `//api/v1`), disertai tes.
