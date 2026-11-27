@@ -89,6 +89,7 @@ Fitur:
 - [ ] Ditunda: lampiran foto (butuh object storage), pesan suara, panggilan.
 
 ## Fase D: Aplikasi mobile
+- [x] Bagian publik (27 Nov 2026): Beranda, Usaha (kategori, jam buka), Laporan warga, form Lapor, update wajib. Diuji dengan `flutter analyze` dan `flutter test` (39 tes).
 
 - [ ] Layar daftar/masuk, penyimpanan token aman (`flutter_secure_storage`).
 - [ ] Daftar percakapan dan layar chat.

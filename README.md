@@ -10,13 +10,13 @@ Portal web (dan nanti aplikasi mobile) yang menghubungkan warga dengan usaha dan
 
 - Beranda lingkungan: profil, pengumuman, usaha terpopuler
 - Direktori usaha: pencarian nama, filter kategori, detail usaha, jam buka, tombol pesan via WhatsApp
-- API JSON `/api/v1/businesses`, `/api/v1/health`, dan `/api/v1/app-version` (cek versi/update wajib), dipakai aplikasi Flutter
+- API JSON `/api/v1` (dipakai web dan aplikasi Flutter): `home`, `categories`, `businesses` (+ `businesses/{slug}`), `reports` (GET daftar publik, POST kirim laporan), `app-version` (cek update wajib), `health`
 - **Panel admin (CMS)** di `/admin`: kelola usaha, pengumuman, agenda, dan laporan warga
 - **Laporan warga**: warga melapor di `/lapor` tanpa login, pengurus menindaklanjuti di panel, dan laporan yang disetujui tampil di `/laporan`
 - **Akun warga dengan kode undangan**, data warga, dan pembatasan percobaan login
 - **Sistem rilis aplikasi**: pengecekan versi, update wajib/opsional, dikelola dari panel admin
 - Tema visual Jakarta (siluet kota senja dengan Monas)
-- Aplikasi mobile Flutter (Android dan iOS): cari usaha, lihat detail, pesan via WhatsApp
+- Aplikasi mobile Flutter (Android dan iOS) seperti web: Beranda (pengumuman, agenda, laporan, usaha), Usaha (cari, kategori, jam buka, WhatsApp), Laporan warga, dan form Lapor
 - Unit test web (Vitest) dan mobile (flutter test), dijalankan otomatis di GitHub Actions
 - Skema database multi-lingkungan (PostgreSQL + PostGIS) beserta migrasi dan data contoh
 
@@ -102,24 +102,20 @@ Aplikasi mobile menanyakan server setiap dibuka (`GET /api/v1/app-version?platfo
 
 **iOS:** file `.zip` hasil CI belum ditandatangani sehingga tidak bisa dipasang di iPhone. Untuk pengguna, build harus ditandatangani dan didistribusikan lewat TestFlight atau App Store (perlu akun Apple Developer berbayar, belum disiapkan). Tautan TestFlight/App Store itulah yang diisikan sebagai tautan unduhan rilis iOS.
 
-### Kunci tanda tangan Android (wajib agar update bisa terpasang)
-Android hanya mau memperbarui aplikasi bila APK baru ditandatangani **kunci yang sama** dengan yang terpasang. Tanpa secret di bawah, CI memakai kunci debug acak yang berbeda di tiap build, sehingga update gagal ("aplikasi tidak terpasang"). Buat kunci **sekali saja** dan simpan cadangannya dengan aman (jika hilang, pengguna harus mencopot-pasang aplikasi):
+### Kunci tanda tangan Android (wajib agar update bisa menimpa)
+Android hanya mau memperbarui aplikasi bila APK baru ditandatangani **kunci yang sama** dengan yang terpasang. Tanpa kunci tetap, setiap build CI memakai kunci debug acak yang berbeda, sehingga update gagal ("aplikasi tidak terpasang") dan pengguna harus mencopot lalu memasang ulang. Karena itu **build Android di CI sengaja gagal** bila kunci belum diatur.
 
-```bash
-keytool -genkey -v -keystore release.jks -alias kampung -keyalg RSA -keysize 2048 -validity 10000
-# PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) | Set-Clipboard
-# macOS/Linux: base64 -w0 release.jks
+Satu kali saja, di komputer Anda (PowerShell, dari folder `mobile/`):
 ```
-Di GitHub: Settings > Secrets and variables > Actions > **Secrets**, tambahkan `ANDROID_KEYSTORE_BASE64` (isi base64 tadi), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`kampung`), dan `ANDROID_KEY_PASSWORD`. **Jangan commit `release.jks`.** Memasang APK dari tautan di luar Play Store juga mengharuskan pengguna mengizinkan "pasang aplikasi dari sumber tidak dikenal".
+powershell -ExecutionPolicy Bypass -File tool\create-keystore.ps1
+```
+Skrip menanyakan sandi (tidak tampil), membuat `tool\keystore-out\release.jks` dan `keystore-base64.txt` (juga disalin ke papan klip), lalu menampilkan 4 GitHub Secret yang harus dibuat: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`kampung`), `ANDROID_KEY_PASSWORD` (sama dengan sandi keystore). Buat di GitHub: Settings > Secrets and variables > Actions > **Secrets**.
 
-## Warga: kode undangan dan akun
-
-Warga mendaftar sendiri di `/daftar` memakai **kode undangan** dari pengurus, lalu masuk di `/masuk` dengan nomor HP dan sandi. Alurnya:
-1. Pengurus membuka **Panel Admin > Kode undangan**, membuat kode (opsional: label, batas pemakaian, masa berlaku), lalu membagikan kode atau tautannya (mis. di grup WhatsApp RT).
-2. Warga membuka tautan `/daftar?kode=...`, mengisi nama, nomor HP, sandi, alamat (blok, nomor rumah, RT/RW), dan menyetujui penggunaan data. Mereka langsung menjadi anggota aktif.
-3. Di `/akun` warga mengubah data, mengganti sandi, atau menghapus akun. Pengurus mengelola warga di **Data warga** (tangguhkan, ubah peran).
-
-Keamanan dan privasi: sandi di-hash; percobaan login dan tebak kode dibatasi; hanya pengurus yang melihat nomor HP dan setiap pembukaan dicatat; nomor HP belum diverifikasi (tidak ada OTP); lihat [/privasi](src/app/(public)/privasi/page.tsx) (draf, perlu ditinjau). Belum ada: atur ulang sandi oleh pengurus, direktori warga, dan ekspor data.
+- **Simpan cadangan `release.jks` dan sandinya** di tempat aman (di luar repo). Bila hilang, update tidak bisa lagi menimpa versi lama.
+- Folder keluaran dan berkas `*.jks` sudah di-ignore git; jangan pernah commit atau mengirimnya lewat chat.
+- CI memverifikasi APK dengan `apksigner` dan mencetak **sidik jari SHA-256** di ringkasan job. Nilainya harus sama di setiap build.
+- **Aplikasi yang sudah terpasang dari build lama (kunci acak) sekali lagi harus dicopot dan dipasang ulang.** Setelah itu, semua update berikutnya bisa menimpa.
+- Memasang APK dari luar Play Store mengharuskan pengguna mengizinkan "pasang aplikasi dari sumber tidak dikenal".
 
 ## Panel admin (CMS)
 

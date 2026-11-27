@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'config.dart';
-import 'screens/business_list_screen.dart';
+import 'screens/app_shell.dart';
 import 'services/api_client.dart';
 import 'widgets/update_gate.dart';
 
@@ -29,14 +29,14 @@ class KampungDigitalApp extends StatelessWidget {
       title: 'Kampung Digital',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B7F5C)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F6B4A)),
         useMaterial3: true,
       ),
       home: UpdateGate(
         api: api,
         currentBuild: currentBuild,
         platform: platform,
-        child: BusinessListScreen(api: api),
+        child: AppShell(api: api),
       ),
     );
   }

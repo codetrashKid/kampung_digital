@@ -32,7 +32,15 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Agenda tampil di beranda; kategori dengan jumlah usaha; favicon.
 - Unit test baru: sandi, sesi, validasi, otorisasi, format (total 62 tes web).
 
+### Ditambahkan
+- **Aplikasi mobile dibuat seperti web**: navigasi bawah (Beranda, Usaha, Laporan, Lapor); Beranda memuat profil lingkungan, kategori, pengumuman, agenda, laporan terbaru, dan usaha terpopuler; Usaha dengan filter kategori dan jam buka di detail; daftar laporan warga dengan filter status/jenis; form lapor (nama dan nomor HP opsional) dengan validasi di aplikasi dan server. Login warga di aplikasi menyusul (Fase D).
+- API publik baru (tanpa mengubah yang lama): `GET /api/v1/home`, `GET /api/v1/categories`, `GET /api/v1/businesses/{slug}`, `GET` dan `POST /api/v1/reports`. Logika kirim laporan dipakai bersama oleh form web dan API (`src/lib/reports.ts`). Tes baru (total web 126).
+- `mobile/tool/create-keystore.ps1` untuk membuat kunci tanda tangan Android tetap (sandi diketik, tidak lewat chat).
+- Flutter SDK 3.50.1 dipasang di folder sementara untuk menjalankan `flutter analyze` dan `flutter test` secara lokal: **tanpa masalah, 39 tes lolos** (sebelumnya Flutter hanya diuji di CI).
+
 ### Diperbaiki
+- **Update APK tidak bisa menimpa versi terpasang** (harus hapus lalu pasang ulang): build CI memakai kunci debug acak yang berbeda tiap build. Kini build Android **gagal** bila 4 GitHub Secret kunci belum diatur, APK diverifikasi dengan `apksigner` (gagal bila masih kunci debug), dan sidik jari SHA-256 dicetak di ringkasan job.
+- Bug aplikasi mobile: `setState(() => _future = ...)` mengembalikan Future dan memicu assertion di mode debug (ditemukan oleh tes yang baru bisa dijalankan); diganti blok.
 - Aplikasi Android "tidak terhubung": build CI memakai alamat palsu `https://example.invalid` bila variabel `API_BASE_URL` kosong, dan pesan error tidak menyebut penyebabnya. Kini build Android/iOS **gagal dengan pesan jelas** bila `API_BASE_URL` kosong atau bukan https, dan layar error aplikasi menampilkan alamat server serta penyebab (waktu habis, host tidak ditemukan, kode HTTP). Tes ditambahkan.
 - Workflow `mobile.yml` tidak valid YAML (baris pembaca versi memuat `version: ` di teks biasa) sehingga GitHub menolak menjalankannya; diganti blok skrip `run: |`. Kedua workflow kini divalidasi dengan parser YAML sebelum di-commit.
 - Pesan "Database belum siap" kini menampilkan **penyebab asli dan petunjuk perbaikan** saat mode pengembangan (mis. pool sesi Supabase penuh, sandi salah, tabel belum ada), dan `/api/v1/health` menyertakan `detail` di mode pengembangan; di produksi tetap pesan umum (detail ada di log). Tes ditambahkan (total 83).

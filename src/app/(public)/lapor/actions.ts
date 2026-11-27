@@ -1,26 +1,12 @@
 "use server";
 
-import { createHash } from "node:crypto";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isDbConfigured } from "@/lib/db";
-import { countRecentReportsByIp, createReport, getCurrentCommunity } from "@/lib/queries";
-import { writeAudit } from "@/lib/admin-queries";
+import { getCurrentCommunity } from "@/lib/queries";
+import { submitPublicReport } from "@/lib/reports";
+import { clientIp } from "@/lib/request";
 import { parseReport } from "@/lib/validation";
 import type { FormState } from "@/app/admin/actions";
-
-const MAX_PER_HOUR = 5;
-
-/** Hash IP + rahasia server: cukup untuk membatasi spam tanpa menyimpan IP asli. */
-function hashIp(ip: string): string {
-  return createHash("sha256").update(`${process.env.AUTH_SECRET ?? ""}|${ip}`).digest("hex");
-}
-
-async function clientIp(): Promise<string | null> {
-  const h = await headers();
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || h.get("x-real-ip") || null;
-}
 
 export async function submitReportAction(_prev: FormState, formData: FormData): Promise<FormState> {
   // Kolom jebakan untuk bot: manusia tidak melihatnya. Pura-pura berhasil agar bot tidak belajar.
@@ -33,14 +19,10 @@ export async function submitReportAction(_prev: FormState, formData: FormData): 
   try {
     const community = await getCurrentCommunity();
     if (!community) return { errors: ["Lingkungan tidak ditemukan."] };
-
-    const ip = await clientIp();
-    const ipHash = ip ? hashIp(ip) : null;
-    if (ipHash && (await countRecentReportsByIp(ipHash)) >= MAX_PER_HOUR) {
+    const result = await submitPublicReport(community.id, parsed.value, await clientIp());
+    if (result === "throttled") {
       return { errors: ["Terlalu banyak laporan dari jaringan Anda. Silakan coba lagi dalam satu jam."] };
     }
-    const id = await createReport(community.id, parsed.value, ipHash);
-    await writeAudit(community.id, null, "report.create", "report", id);
   } catch (err) {
     console.error(err);
     return { errors: ["Terjadi kesalahan pada server. Coba lagi."] };

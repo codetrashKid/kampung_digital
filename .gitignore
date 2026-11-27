@@ -12,3 +12,9 @@ next-env.d.ts
 mobile/.dart_tool/
 mobile/build/
 .next-check/
+
+# Kunci tanda tangan Android: jangan pernah di-commit
+*.jks
+*.keystore
+keystore-base64.txt
+mobile/tool/keystore-out/

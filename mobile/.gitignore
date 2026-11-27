@@ -9,3 +9,7 @@ android/
 ios/
 *.iml
 .idea/
+tool/keystore-out/
+*.jks
+*.keystore
+keystore-base64.txt
