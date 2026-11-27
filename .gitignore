@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+.DS_Store
+# Flutter (folder mobile/ nanti)
+mobile/.dart_tool/
+mobile/build/

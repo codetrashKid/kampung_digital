@@ -1,0 +1,11 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+pubspec.lock
+# android/ dan ios/ dibuat oleh `flutter create` (lihat tool/prepare_platforms.sh)
+android/
+ios/
+*.iml
+.idea/
