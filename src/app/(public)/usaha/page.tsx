@@ -25,13 +25,14 @@ export default async function BusinessesPage({ searchParams }: Props) {
     return (
       <>
         <h1>Usaha &amp; Jasa Warga</h1>
-        <form className="search" action="/usaha">
+        <p className="muted">Dukung usaha tetangga: cari, lihat jam buka, lalu pesan lewat WhatsApp.</p>
+        <form className="search" action="/usaha" role="search">
           <input name="q" defaultValue={q ?? ""} placeholder="Cari nama usaha…" aria-label="Cari usaha" />
           {kategori && <input type="hidden" name="kategori" value={kategori} />}
           <button className="btn" type="submit">Cari</button>
         </form>
 
-        <div className="chips">
+        <nav className="chips" aria-label="Kategori">
           <Link href="/usaha" className={!kategori ? "chip active" : "chip"}>Semua</Link>
           {categories.map((c) => (
             <Link
@@ -42,10 +43,10 @@ export default async function BusinessesPage({ searchParams }: Props) {
               {c.icon} {c.name}
             </Link>
           ))}
-        </div>
+        </nav>
 
         {businesses.length === 0 ? (
-          <p className="muted">Tidak ada usaha yang cocok.</p>
+          <p className="empty">Tidak ada usaha yang cocok. Coba kata kunci atau kategori lain.</p>
         ) : (
           <div className="grid">{businesses.map((b) => <BusinessCard key={b.id} b={b} />)}</div>
         )}

@@ -11,3 +11,4 @@ next-env.d.ts
 # Flutter (folder mobile/ nanti)
 mobile/.dart_tool/
 mobile/build/
+.next-check/

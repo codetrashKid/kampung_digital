@@ -58,3 +58,19 @@ CROSS JOIN communities c
 CROSS JOIN users u
 WHERE c.slug = 'contoh-kampung' AND u.phone = '+620000000001'
   AND NOT EXISTS (SELECT 1 FROM announcements a WHERE a.community_id = c.id AND a.title = v.title);
+
+-- Agenda contoh (relatif terhadap hari ini, jadi selalu "mendatang"). Tengah malam UTC = 07.00 WIB.
+INSERT INTO events (community_id, author_id, title, description, location_text, starts_at, ends_at, status)
+SELECT c.id, u.id, v.title, v.description, v.location_text, v.starts_at, v.ends_at, 'active'
+FROM (VALUES
+  ('Kerja bakti bulanan', 'Membersihkan selokan dan lingkungan. Bawa peralatan masing-masing.', 'Balai warga',
+     date_trunc('day', now()) + interval '7 days', date_trunc('day', now()) + interval '7 days 3 hours'),
+  ('Senam pagi bersama', 'Senam santai untuk semua usia.', 'Lapangan RT',
+     date_trunc('day', now()) + interval '3 days' - interval '1 hour', date_trunc('day', now()) + interval '3 days'),
+  ('Bazar usaha warga', 'Bazar produk dan kuliner usaha warga.', 'Halaman balai warga',
+     date_trunc('day', now()) + interval '14 days 1 hour', date_trunc('day', now()) + interval '14 days 7 hours')
+) AS v(title, description, location_text, starts_at, ends_at)
+CROSS JOIN communities c
+CROSS JOIN users u
+WHERE c.slug = 'contoh-kampung' AND u.phone = '+620000000001'
+  AND NOT EXISTS (SELECT 1 FROM events e WHERE e.community_id = c.id AND e.title = v.title);

@@ -37,3 +37,27 @@ describe("DAY_NAMES", () => {
     expect(DAY_NAMES[0]).toBe("Minggu");
   });
 });
+
+import { avatarColor, dateBlock, formatEventTime, initialOf } from "@/lib/format";
+
+describe("avatar", () => {
+  it("initialOf mengambil huruf pertama kapital", () => {
+    expect(initialOf("  warung bu sari")).toBe("W");
+    expect(initialOf("")).toBe("?");
+  });
+  it("avatarColor stabil untuk teks yang sama", () => {
+    expect(avatarColor("makanan")).toBe(avatarColor("makanan"));
+    expect(avatarColor("makanan")).toMatch(/^hsl\(\d+ 45% 36%\)$/);
+  });
+});
+
+describe("tanggal agenda (WIB)", () => {
+  it("tengah malam UTC jatuh di hari yang sama pukul 07.00 WIB", () => {
+    const d = dateBlock("2026-12-04T00:00:00Z");
+    expect(d.day).toBe("4");
+    expect(formatEventTime("2026-12-04T00:00:00Z")).toContain("07.00 WIB");
+  });
+  it("UTC 20:00 sudah hari berikutnya di WIB", () => {
+    expect(dateBlock("2026-12-04T20:00:00Z").day).toBe("5");
+  });
+});

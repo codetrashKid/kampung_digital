@@ -11,6 +11,9 @@ Portal web (dan nanti aplikasi mobile) yang menghubungkan warga dengan usaha dan
 - Beranda lingkungan: profil, pengumuman, usaha terpopuler
 - Direktori usaha: pencarian nama, filter kategori, detail usaha, jam buka, tombol pesan via WhatsApp
 - API JSON `/api/v1/businesses` dan `/api/v1/health` (akan dipakai aplikasi Flutter)
+- **Panel admin (CMS)** di `/admin`: kelola usaha, pengumuman, agenda, dan laporan warga
+- **Laporan warga**: warga melapor di `/lapor` tanpa login, pengurus menindaklanjuti di panel, dan laporan yang disetujui tampil di `/laporan`
+- Tema visual Jakarta (siluet kota senja dengan Monas)
 - Aplikasi mobile Flutter (Android dan iOS): cari usaha, lihat detail, pesan via WhatsApp
 - Unit test web (Vitest) dan mobile (flutter test), dijalankan otomatis di GitHub Actions
 - Skema database multi-lingkungan (PostgreSQL + PostGIS) beserta migrasi dan data contoh
@@ -35,8 +38,11 @@ npm install
 cp .env.example .env.local      # lalu isi DATABASE_URL
 npm run db:migrate              # membuat tabel
 npm run db:seed                 # mengisi data contoh
-npm run dev                     # buka http://localhost:3000
+npm run admin:create -- --email anda@contoh.com   # membuat admin (sandi ditanya)
+npm run dev                     # buka http://localhost:3000, panel di /admin
 ```
+
+Isi juga `AUTH_SECRET` di `.env.local` (minimal 32 karakter acak, perintah pembuatnya ada di `.env.example`); tanpa itu login admin dinonaktifkan.
 
 Tanpa `DATABASE_URL`, aplikasi tetap berjalan dan menampilkan petunjuk pengaturan.
 
@@ -47,7 +53,9 @@ Tanpa `DATABASE_URL`, aplikasi tetap berjalan dan menampilkan petunjuk pengatura
 | `npm run dev` | Menjalankan mode pengembangan |
 | `npm run build` | Build produksi (dipakai Vercel) |
 | `npm run typecheck` | Memeriksa tipe TypeScript |
+| `NEXT_DIST_DIR=.next-check npm run build` | Build tanpa bentrok dengan `npm run dev` yang sedang jalan (Windows PowerShell: `$env:NEXT_DIST_DIR='.next-check'; npm run build`) |
 | `npm test` | Menjalankan unit test web (Vitest) |
+| `npm run admin:create -- --email ...` | Membuat/mengatur sandi admin lingkungan |
 | `npm run db:migrate` | Menerapkan migrasi di `db/migrations/` |
 | `npm run db:seed` | Mengisi data contoh dari `db/seed.sql` |
 
@@ -57,15 +65,16 @@ Tanpa `DATABASE_URL`, aplikasi tetap berjalan dan menampilkan petunjuk pengatura
 .
 ├── src/
 │   ├── app/            # Halaman dan API (routing berbasis folder)
-│   │   ├── page.tsx            # Beranda
-│   │   ├── usaha/              # Direktori dan detail usaha
+│   │   ├── (public)/           # Beranda, direktori dan detail usaha
+│   │   ├── admin/              # Panel admin (login + CMS)
 │   │   └── api/v1/             # API JSON
 │   ├── components/     # Komponen UI bersama
-│   └── lib/            # db.ts (koneksi), queries.ts (query), format.ts
+│   └── lib/            # db.ts, queries.ts, admin-queries.ts, auth/session/password, validation, format
 ├── db/
 │   ├── migrations/     # Migrasi SQL berurutan (0001_init.sql, ...)
 │   └── seed.sql        # Data contoh
-├── scripts/            # migrate.mjs, seed.mjs
+├── public/             # Aset statis (jakarta-skyline.svg)
+├── scripts/            # migrate.mjs, seed.mjs, create-admin.mjs
 ├── docs/               # DATABASE.md, PANDUAN-PEMULA.md
 ├── mobile/             # Aplikasi Flutter (lib/, test/, tool/)
 ├── tests/              # Unit test web (Vitest)
@@ -75,6 +84,15 @@ Tanpa `DATABASE_URL`, aplikasi tetap berjalan dan menampilkan petunjuk pengatura
 ├── CHANGELOG.md        # Catatan setiap perubahan
 └── LICENSE
 ```
+
+## Panel admin (CMS)
+
+Buka `/admin` (tautan "Masuk pengurus" ada di footer). Yang bisa dikelola: **usaha** (tambah, ubah, tayangkan atau sembunyikan, hapus), **pengumuman**, **agenda**, dan **laporan warga** (lihat dan ubah status). Hanya `super_admin` platform, atau `admin_lingkungan`/`pengurus` aktif di lingkungan ini, yang bisa masuk. Penghapusan bersifat lembut (data tidak hilang dari database).
+
+- Sandi disimpan sebagai hash scrypt; sesi memakai cookie HttpOnly bertanda tangan. Di Vercel, isi `AUTH_SECRET` di Environment Variables.
+- Laporan warga masuk lewat `/lapor` tanpa login. Nama dan nomor HP pelapor opsional dan hanya terlihat pengurus; ada kolom jebakan bot dan batas 5 laporan per jam per jaringan.
+- Laporan baru **tidak otomatis tampil publik**: pengurus menyetujuinya lewat tombol "Tampilkan ke publik" (mencegah spam dan tuduhan). Nama dan nomor pelapor tidak pernah ditampilkan.
+- Belum ada: tanggapan pengurus, foto laporan, unggah foto, edit jam buka, pembatasan percobaan login per IP, dan login OTP untuk warga (tahap berikutnya).
 
 ## Aplikasi mobile (Flutter)
 

@@ -63,3 +63,12 @@ Web berjalan di Vercel, database di layanan Postgres terkelola yang punya paket 
 - `rating_avg` dan `rating_count` pada `businesses` adalah kolom turunan; perbarui saat ulasan dibuat, diubah, atau dihapus.
 - OTP dan sesi login ditangani penyedia autentikasi (mis. Supabase/Firebase) sehingga tidak ada tabel OTP di sini.
 - `npm run db:migrate` mencatat migrasi yang sudah berjalan di tabel `schema_migrations` dan menerapkan file baru secara berurutan dalam satu transaksi per file.
+
+## Riwayat migrasi
+
+| Migrasi | Isi |
+|---|---|
+| `0001_init.sql` | Skema awal |
+| `0002_admin_auth.sql` | `users.password_hash` (format `scrypt$salt$hash`) untuk login admin email + sandi |
+| `0003_reports.sql` | Tabel `reports` (laporan warga) dan tipe `report_status`; `ip_hash` hanya untuk pembatasan spam |
+| `0004_reports_public.sql` | `reports.is_public` (moderasi tampil publik, bawaan `false`) |

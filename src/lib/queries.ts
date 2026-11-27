@@ -109,3 +109,105 @@ export async function listAnnouncements(communityId: string, limit = 3): Promise
     order by published_at desc nulls last
     limit ${limit}`;
 }
+
+export type EventItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  location_text: string | null;
+  starts_at: Date;
+  ends_at: Date | null;
+};
+
+/** Agenda yang akan datang (atau sedang berlangsung) di sebuah lingkungan. */
+export async function listUpcomingEvents(communityId: string, limit = 4): Promise<EventItem[]> {
+  const sql = getDb();
+  return sql<EventItem[]>`
+    select id, title, description, location_text, starts_at, ends_at
+    from events
+    where community_id = ${communityId} and status = 'active' and deleted_at is null
+      and coalesce(ends_at, starts_at + interval '3 hours') >= now()
+    order by starts_at
+    limit ${limit}`;
+}
+
+/** Jumlah usaha aktif per kategori di sebuah lingkungan. */
+export async function listCategoriesWithCount(communityId: string): Promise<(Category & { total: number })[]> {
+  const sql = getDb();
+  return sql<(Category & { total: number })[]>`
+    select c.id, c.slug, c.name, c.icon,
+           (select count(*)::int from businesses b
+             where b.category_id = c.id and b.community_id = ${communityId}
+               and b.status = 'active' and b.deleted_at is null) as total
+    from categories c
+    where c.is_active
+    order by c.sort_order, c.name`;
+}
+
+// ---------- Laporan warga (kirim dari form publik) ----------
+
+/** Jumlah laporan dari hash IP yang sama dalam sejam terakhir (pembatasan spam tanpa state di server). */
+export async function countRecentReportsByIp(ipHash: string, minutes = 60): Promise<number> {
+  const sql = getDb();
+  const [row] = await sql<{ n: number }[]>`
+    select count(*)::int as n from reports
+    where ip_hash = ${ipHash} and created_at > now() - make_interval(mins => ${minutes})`;
+  return row.n;
+}
+
+export async function createReport(
+  communityId: string,
+  v: {
+    category: string;
+    title: string;
+    description: string;
+    location_text: string | null;
+    reporter_name: string | null;
+    reporter_phone: string | null;
+  },
+  ipHash: string | null,
+): Promise<string> {
+  const sql = getDb();
+  const [row] = await sql<{ id: string }[]>`
+    insert into reports (community_id, category, title, description, location_text, reporter_name, reporter_phone, ip_hash)
+    values (${communityId}, ${v.category}, ${v.title}, ${v.description}, ${v.location_text},
+            ${v.reporter_name}, ${v.reporter_phone}, ${ipHash})
+    returning id`;
+  return row.id;
+}
+
+export type PublicReport = {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  location_text: string | null;
+  status: string;
+  created_at: Date;
+};
+
+/** Laporan yang disetujui pengurus untuk tampil publik. Tidak pernah memuat data pelapor. */
+export async function listPublicReports(
+  communityId: string,
+  opts: { status?: string; category?: string; limit?: number } = {},
+): Promise<PublicReport[]> {
+  const sql = getDb();
+  const limit = Math.min(Math.max(opts.limit ?? 30, 1), 100);
+  return sql<PublicReport[]>`
+    select id, category, title, description, location_text, status::text as status, created_at
+    from reports
+    where community_id = ${communityId} and is_public and deleted_at is null and status <> 'ditolak'
+      ${opts.status ? sql`and status = ${opts.status}::report_status` : sql``}
+      ${opts.category ? sql`and category = ${opts.category}` : sql``}
+    order by created_at desc
+    limit ${limit}`;
+}
+
+export async function countPublicReportsByStatus(communityId: string): Promise<Record<string, number>> {
+  const sql = getDb();
+  const rows = await sql<{ status: string; n: number }[]>`
+    select status::text as status, count(*)::int as n from reports
+    where community_id = ${communityId} and is_public and deleted_at is null and status <> 'ditolak'
+    group by status`;
+  return Object.fromEntries(rows.map((r) => [r.status, r.n]));
+}

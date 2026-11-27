@@ -77,12 +77,25 @@ Untuk saat ini, ubah lewat SQL (panel admin menyusul di Tahap 2):
    ```
 3. Tambah atau ubah usaha di tabel `businesses` mengikuti pola di `db/seed.sql`.
 
+## 4b. Masuk ke panel admin
+
+1. Buat kunci rahasia dan tempel ke `AUTH_SECRET=` di `.env.local`:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+2. Buat akun admin (sandi akan ditanya dan tidak tampil saat diketik, minimal 10 karakter):
+   ```bash
+   npm run admin:create -- --email anda@contoh.com --name "Nama Anda"
+   ```
+3. Jalankan `npm run dev`, buka `http://localhost:3000/admin`, lalu masuk. Di sana Anda bisa menambah usaha, pengumuman, dan agenda tanpa menulis SQL.
+
 ## 5. Masalah umum
 
 | Gejala | Penyebab dan solusi |
 |---|---|
 | Halaman menampilkan "Database belum siap" | `DATABASE_URL` belum diisi, atau migrasi/seed belum dijalankan |
 | `extension "postgis" is not available` saat migrasi | Penyedia database tidak mendukung PostGIS. Aktifkan lewat dashboard (Supabase: Database → Extensions) atau gunakan penyedia yang mendukung |
+| Login admin: "AUTH_SECRET belum diisi" | Isi `AUTH_SECRET` (minimal 32 karakter) di `.env.local`, lalu mulai ulang `npm run dev` |
 | `password authentication failed` | Sandi atau connection string salah |
 | `node: --env-file is not allowed` / opsi tidak dikenal | Versi Node terlalu lama; pakai Node 20.6+ |
 | Di Vercel halaman error 500 | Periksa Environment Variables di Vercel dan lihat log di tab **Logs** |

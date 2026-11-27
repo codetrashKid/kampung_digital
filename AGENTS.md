@@ -19,17 +19,17 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 3. **Perbarui `CHANGELOG.md`** di bagian `[Belum dirilis]` dengan kategori yang sesuai (Ditambahkan/Diubah/Diperbaiki/Dihapus/Keamanan). Saat rilis, pindahkan ke versi bernomor beserta tanggal dan naikkan `version` di `package.json`.
 4. **Perbarui `README.md`** jika fitur, cara menjalankan, struktur folder, atau teknologi berubah.
 5. **Perbarui `docs/DATABASE.md`** jika skema berubah, dan tambahkan migrasi baru (lihat aturan database).
-6. **Jalankan `npm run typecheck`, `npm test`, dan `npm run build`** (untuk perubahan di `mobile/`: `flutter analyze` dan `flutter test`) sebelum menyatakan selesai. Jangan klaim berhasil jika belum dijalankan; jika tidak bisa dijalankan, katakan apa adanya.
+6. **Jalankan `npm run typecheck`, `npm test`, dan `npm run build`** (bila `npm run dev` sedang jalan, build dengan `NEXT_DIST_DIR=.next-check` agar folder `.next` tidak rusak) (untuk perubahan di `mobile/`: `flutter analyze` dan `flutter test`) sebelum menyatakan selesai. Jangan klaim berhasil jika belum dijalankan; jika tidak bisa dijalankan, katakan apa adanya.
 7. **Pesan commit** memakai Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`.
 
 ## Aturan arsitektur
 
 - **Multi-tenant**: setiap data milik lingkungan punya `community_id`. Setiap query ke tabel ber-`community_id` **wajib** memfilternya. Dilarang menaruh nama, slug, atau konfigurasi satu lingkungan secara hardcode di kode. Lingkungan aktif saat ini dibaca dari `getCurrentCommunity()` di `src/lib/queries.ts` (env `DEFAULT_COMMUNITY_SLUG`); nanti diganti berdasarkan subdomain.
 - **Satu API untuk dua klien**: web dan Flutter memakai API yang sama, berversi (`/api/v1/...`). Jangan membuat logika bisnis ganda di klien. Jangan mengubah bentuk respons API versi yang sudah ada; buat `/api/v2` bila perlu.
-- **Akses database hanya lewat `src/lib/db.ts`** (`getDb()`); query diletakkan di `src/lib/queries.ts`. Gunakan tagged template ``sql`...` `` dengan nilai berparameter. **Dilarang** menyusun SQL dengan penggabungan string dari input pengguna.
+- **Akses database hanya lewat `src/lib/db.ts`** (`getDb()`); query diletakkan di `src/lib/queries.ts` (publik) dan `src/lib/admin-queries.ts` (panel admin). Gunakan tagged template ``sql`...` `` dengan nilai berparameter. **Dilarang** menyusun SQL dengan penggabungan string dari input pengguna.
 - **Next.js 15**: `params` dan `searchParams` adalah `Promise` (gunakan `await`). Halaman yang membaca database memakai `export const dynamic = "force-dynamic"` (atau `revalidate` yang disengaja) agar build tidak mengakses database.
 - **Validasi input** di sisi server untuk semua endpoint. Jangan percaya data dari klien; batasi `limit` dan panjang input.
-- **Otorisasi** dicek di server berdasarkan peran di `community_members` (`warga`, `penjual`, `pengurus`, `admin_lingkungan`) dan `users.platform_role`.
+- **Otorisasi** dicek di server (`requireAdmin()` di setiap halaman dan server action admin; jangan mengandalkan layout saja) berdasarkan peran di `community_members` (`warga`, `penjual`, `pengurus`, `admin_lingkungan`) dan `users.platform_role`.
 - **Ramah hosting gratis/serverless**: jangan menulis file ke disk server (Vercel hanya-baca), jangan mengandalkan proses yang berjalan lama atau state di memori. Foto/file disimpan di object storage; database hanya menyimpan URL.
 - Aplikasi harus tetap bisa di-build dan dijalankan **tanpa** `DATABASE_URL` (menampilkan petunjuk, bukan crash).
 
@@ -64,8 +64,8 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 
 ## Ruang lingkup saat ini
 
-Sudah ada: beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
-Berikutnya (Tahap 2): login OTP, pendaftaran usaha oleh warga, panel admin, pengumuman/agenda dari admin, notifikasi, pengembangan lanjut aplikasi Flutter.
+Sudah ada: laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
+Berikutnya (Tahap 2): login OTP untuk warga, pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
 Ditunda: pembayaran online, chat dalam aplikasi, iuran, surat pengantar, bank sampah.
 
 ## Catatan keputusan
@@ -77,3 +77,8 @@ Tambahkan keputusan penting di bawah ini (tanggal, keputusan, alasan singkat).
 - 2026-11-27: Next.js di root repositori (bukan monorepo `apps/`) agar deploy Vercel sederhana; Flutter nanti di `mobile/`.
 - 2026-11-27: Library database `postgres` (postgres.js) tanpa ORM dulu, supaya sederhana untuk pemula dan mudah dipindah.
 - 2026-11-27: Unit test web memakai Vitest; mobile memakai `flutter test`. Folder `android/`/`ios/` dibuat CI lewat `flutter create` agar repo tetap kecil. Fitur baru wajib disertai tes.
+- 2026-11-27: Login admin memakai email + sandi (scrypt `node:crypto`, sesi cookie HMAC stateless, `AUTH_SECRET`), bukan OTP, karena OTP butuh layanan SMS/WhatsApp pihak ketiga. OTP untuk warga menyusul setelah ada keputusan penyedia.
+- 2026-11-27: Waktu pada form agenda dianggap WIB (UTC+7) dan ditampilkan dalam WIB; zona waktu per lingkungan belum didukung.
+- 2026-11-27: Laporan warga memakai form publik tanpa login (nama/HP opsional) dengan anti-spam kolom jebakan + batas per jam berbasis hash IP, karena login warga (OTP) belum ada. Setelah OTP tersedia, pertimbangkan mewajibkan login.
+- 2026-11-27: Laporan warga baru bersifat privat (`reports.is_public = false`); hanya yang disetujui pengurus tampil di `/laporan`, dan data pelapor tidak pernah ikut ke halaman publik. Alasan: form tanpa login rawan spam dan tuduhan.
+- 2026-11-27: Tema visual "Jakarta" (siluet kota senja) pada hero dan login; aset di `public/jakarta-skyline.svg`, warna merek tetap hijau.
