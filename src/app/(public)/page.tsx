@@ -5,6 +5,7 @@ import { isDbConfigured } from "@/lib/db";
 import { dateBlock, formatDate, formatEventTime } from "@/lib/format";
 import { reportCategoryLabel } from "@/lib/validation";
 import StatusPill from "@/components/admin/StatusPill";
+import Icon, { type IconName } from "@/components/Icon";
 import {
   getCurrentCommunity,
   listAnnouncements,
@@ -13,6 +14,13 @@ import {
   listPublicReports,
   listUpcomingEvents,
 } from "@/lib/queries";
+
+const QUICK: { href: string; label: string; hint: string; icon: IconName; tone: string }[] = [
+  { href: "/usaha", label: "Cari usaha", hint: "Warung, jasa, les", icon: "store", tone: "tone-green" },
+  { href: "/lapor", label: "Buat laporan", hint: "Masalah di lingkungan", icon: "flag", tone: "tone-rose" },
+  { href: "/laporan", label: "Laporan warga", hint: "Pantau penanganan", icon: "inbox", tone: "tone-blue" },
+  { href: "/#agenda", label: "Agenda", hint: "Kegiatan mendatang", icon: "calendar", tone: "tone-amber" },
+];
 
 export const dynamic = "force-dynamic"; // data diambil dari database setiap kunjungan
 
@@ -51,6 +59,15 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <nav className="quick" aria-label="Aksi cepat">
+          {QUICK.map((q) => (
+            <Link key={q.href} href={q.href} className="quick-item">
+              <span className={`quick-ico ${q.tone}`}><Icon name={q.icon} size={22} /></span>
+              <span>{q.label}<small>{q.hint}</small></span>
+            </Link>
+          ))}
+        </nav>
+
         {categories.length > 0 && (
           <section className="section">
             <div className="section-head"><h2>Cari berdasarkan kategori</h2></div>
@@ -84,7 +101,7 @@ export default async function HomePage() {
                 </div>
               )}
             </section>
-            <section>
+            <section id="agenda">
               <div className="section-head"><h2>Agenda</h2></div>
               {events.length === 0 ? (
                 <p className="empty">Belum ada agenda.</p>

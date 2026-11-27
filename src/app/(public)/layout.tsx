@@ -1,4 +1,6 @@
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
+import NavLink from "@/components/NavLink";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,14 +12,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <span className="brand-mark" aria-hidden="true">K</span>
             <span>Kampung Digital</span>
           </Link>
-          <nav aria-label="Menu utama">
-            <Link href="/">Beranda</Link>
-            <Link href="/usaha">Usaha &amp; Jasa</Link>
-            <Link href="/laporan">Laporan</Link>
+          <nav className="top-nav" aria-label="Menu utama">
+            <NavLink href="/" label="Beranda" icon="home" />
+            <NavLink href="/usaha" label="Usaha & Jasa" icon="store" />
+            <NavLink href="/laporan" label="Laporan" icon="flag" />
+            <NavLink href="/lapor" label="Buat laporan" exact className="top-cta" />
           </nav>
         </div>
       </header>
       <main id="isi" className="container page">{children}</main>
+      <div className="skyline-divider" aria-hidden="true" />
       <footer className="site-footer">
         <div className="container foot">
           <div>
@@ -26,11 +30,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </div>
           <div className="foot-links small">
             <Link href="/usaha">Cari usaha</Link>
+            <Link href="/laporan">Laporan warga</Link>
             <Link href="/lapor">Lapor ke pengurus</Link>
             <Link href="/admin">Masuk pengurus</Link>
           </div>
         </div>
       </footer>
+      <BottomNav />
     </>
   );
 }

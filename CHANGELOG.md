@@ -30,6 +30,8 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Koneksi database gagal (`EMAXCONNSESSION`) bila memakai Supabase Session pooler port 5432: dokumentasi kini menyarankan Transaction pooler port 6543; skrip `db:migrate`, `db:seed`, dan `admin:create` memakai `prepare: false` agar kompatibel dengan pooler tersebut.
 
 ### Diubah
+- **Redesain tampilan (portal publik dan CMS)**: font Plus Jakarta Sans (`next/font`), sistem desain baru (warna, bayangan, ikon SVG `Icon`), menu aktif (`NavLink`), navigasi bawah di ponsel (`BottomNav`), tile aksi cepat di beranda; CMS: sidebar berikon dengan grup menu dan laci menu di ponsel (`AdminShell`), ringkasan baru (sapaan, kartu statistik berikon, "Perlu perhatian", aksi cepat, linimasa aktivitas), tabel, form, dan halaman login yang lebih rapi. Tes `isActivePath` ditambahkan (total 87).
+- Rencana kerja Tahap 2 (login dan data warga, chat saluran/grup, mobile, keamanan) ditulis di `docs/RENCANA-TAHAP-2.md` beserta keputusan yang dibutuhkan.
 - Deploy: `vercel.json` (region fungsi `hnd1`/Tokyo, dekat database Supabase), panduan environment variable Vercel (`DATABASE_URL`, `DEFAULT_COMMUNITY_SLUG`, `AUTH_SECRET`) di README dan panduan pemula.
 - Mobile: `ApiClient` membuang garis miring di akhir `API_BASE_URL` (mencegah alamat `//api/v1`), disertai tes.
 - Mobile: impor `package:flutter/material.dart` diganti `package:material_ui/material_ui.dart` (paket `material_ui ^1.11.1` ditambahkan) karena `material.dart` dinyatakan deprecated di Flutter 3.50 dan membuat `flutter analyze` gagal di CI. SDK minimum mobile naik ke Dart 3.13 (Flutter 3.47+). Belum diverifikasi: Flutter tidak terpasang di mesin ini, jadi hasilnya baru terlihat di CI.

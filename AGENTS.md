@@ -65,7 +65,7 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 ## Ruang lingkup saat ini
 
 Sudah ada: sistem rilis aplikasi dan update wajib, laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
-Berikutnya (Tahap 2): login OTP untuk warga, pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
+Berikutnya (Tahap 2, rencana rinci di `docs/RENCANA-TAHAP-2.md`; perbarui centangnya saat mengerjakan): login OTP untuk warga, pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
 Ditunda: pembayaran online, chat dalam aplikasi, iuran, surat pengantar, bank sampah.
 
 ## Catatan keputusan

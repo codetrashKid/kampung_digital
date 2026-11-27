@@ -160,6 +160,9 @@ Keputusan, ERD, dan aturan ada di [docs/DATABASE.md](docs/DATABASE.md).
 
 ## Roadmap
 
+Rencana rinci Tahap 2 (login dan data warga, chat saluran dan grup, mobile) ada di [docs/RENCANA-TAHAP-2.md](docs/RENCANA-TAHAP-2.md).
+
+
 1. **Tahap 1**: satu lingkungan, portal profil dan direktori usaha (sedang berjalan).
 2. **Tahap 2**: login OTP, pendaftaran usaha oleh warga, panel admin, pengumuman dan agenda, notifikasi, aplikasi Flutter.
 3. **Tahap 3**: iuran digital, surat pengantar online, bank sampah.
