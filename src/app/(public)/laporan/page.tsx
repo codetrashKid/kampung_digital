@@ -89,6 +89,6 @@ export default async function PublicReportsPage({ searchParams }: Props) {
     );
   } catch (err) {
     console.error(err);
-    return <SetupNotice message="Tidak bisa terhubung ke database. Pastikan migrasi sudah dijalankan (npm run db:migrate)." />;
+    return <SetupNotice message="Tidak bisa terhubung ke database. Pastikan migrasi sudah dijalankan (npm run db:migrate)." error={err} />;
   }
 }

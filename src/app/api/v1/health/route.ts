@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb, isDbConfigured } from "@/lib/db";
+import { describeDbError } from "@/lib/db-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,10 @@ export async function GET() {
   try {
     await getDb()`select 1`;
     return NextResponse.json({ status: "ok", database: "terhubung" });
-  } catch {
-    return NextResponse.json({ status: "error", database: "gagal terhubung" }, { status: 503 });
+  } catch (err) {
+    console.error(err);
+    // Penyebab asli hanya di mode pengembangan (tidak membocorkan detail di produksi).
+    const detail = process.env.NODE_ENV !== "production" ? { detail: describeDbError(err) } : {};
+    return NextResponse.json({ status: "error", database: "gagal terhubung", ...detail }, { status: 503 });
   }
 }

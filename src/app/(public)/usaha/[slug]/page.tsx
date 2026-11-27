@@ -36,7 +36,7 @@ export default async function BusinessDetailPage({ params }: Props) {
     data = await load(slug);
   } catch (err) {
     console.error(err);
-    return <SetupNotice message="Tidak bisa terhubung ke database." />;
+    return <SetupNotice message="Tidak bisa terhubung ke database." error={err} />;
   }
   if (!data) notFound();
 

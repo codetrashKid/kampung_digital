@@ -54,6 +54,6 @@ export default async function BusinessesPage({ searchParams }: Props) {
     );
   } catch (err) {
     console.error(err);
-    return <SetupNotice message="Tidak bisa terhubung ke database." />;
+    return <SetupNotice message="Tidak bisa terhubung ke database." error={err} />;
   }
 }

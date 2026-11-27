@@ -145,6 +145,6 @@ export default async function HomePage() {
     );
   } catch (err) {
     console.error(err);
-    return <SetupNotice message="Tidak bisa terhubung ke database. Periksa DATABASE_URL dan pastikan migrasi sudah dijalankan." />;
+    return <SetupNotice message="Tidak bisa terhubung ke database. Periksa DATABASE_URL dan pastikan migrasi sudah dijalankan." error={err} />;
   }
 }

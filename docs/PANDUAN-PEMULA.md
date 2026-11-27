@@ -95,10 +95,10 @@ Untuk saat ini, ubah lewat SQL (panel admin menyusul di Tahap 2):
 
 | Gejala | Penyebab dan solusi |
 |---|---|
-| Halaman menampilkan "Database belum siap" | `DATABASE_URL` belum diisi, atau migrasi/seed belum dijalankan |
+| Halaman menampilkan "Database belum siap" (di mode `npm run dev` penyebab aslinya tampil di kotak peringatan) | `DATABASE_URL` belum diisi, atau migrasi/seed belum dijalankan |
 | `extension "postgis" is not available` saat migrasi | Penyedia database tidak mendukung PostGIS. Aktifkan lewat dashboard (Supabase: Database → Extensions) atau gunakan penyedia yang mendukung |
 | Login admin: "AUTH_SECRET belum diisi" | Isi `AUTH_SECRET` (minimal 32 karakter) di `.env.local`, lalu mulai ulang `npm run dev` |
-| `EMAXCONNSESSION max clients reached in session mode` atau "Database belum siap" padahal `DATABASE_URL` benar | Supabase Session pooler (port 5432) hanya mengizinkan 15 koneksi dan cepat penuh (server dev, Vercel). Ganti port di `DATABASE_URL` menjadi **6543** (Transaction pooler), lalu mulai ulang `npm run dev` / Redeploy di Vercel |
+| `EMAXCONNSESSION max clients reached in session mode` atau "Database belum siap" padahal `DATABASE_URL` benar | Supabase Session pooler (port 5432) hanya mengizinkan 15 koneksi dan cepat penuh (server dev, Vercel). Ganti port di `DATABASE_URL` menjadi **6543** (Transaction pooler), lalu **mulai ulang `npm run dev`** (koneksi lama tersimpan di memori proses dan tidak ikut berganti saat `.env.local` diubah) / Redeploy di Vercel |
 | `password authentication failed` | Sandi atau connection string salah |
 | `node: --env-file is not allowed` / opsi tidak dikenal | Versi Node terlalu lama; pakai Node 20.6+ |
 | Di Vercel halaman error 500 | Periksa Environment Variables di Vercel dan lihat log di tab **Logs** |
