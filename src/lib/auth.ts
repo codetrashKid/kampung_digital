@@ -75,6 +75,13 @@ export async function requireAdmin(): Promise<AdminContext> {
   return admin;
 }
 
+/** Untuk fitur tingkat platform (mis. rilis aplikasi): hanya super_admin. */
+export async function requireSuperAdmin(): Promise<AdminContext> {
+  const admin = await requireAdmin();
+  if (admin.role !== "super_admin") redirect("/admin");
+  return admin;
+}
+
 export async function startSession(userId: string): Promise<void> {
   const token = createSessionToken(userId, getAuthSecret());
   (await cookies()).set(SESSION_COOKIE, token, {

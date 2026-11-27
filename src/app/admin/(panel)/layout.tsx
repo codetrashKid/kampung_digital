@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: { default: "Panel Pengurus", template: "%s · Panel Pengurus" }, robots: { index: false, follow: false } };
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
-  const { user, community } = await requireAdmin();
+  const { user, community, role } = await requireAdmin();
   return (
     <div className="admin-shell">
       <aside className="admin-side">
@@ -21,6 +21,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <Link href="/admin/laporan">Laporan warga</Link>
           <Link href="/admin/pengumuman">Pengumuman</Link>
           <Link href="/admin/agenda">Agenda</Link>
+          {role === "super_admin" && <Link href="/admin/rilis">Rilis aplikasi</Link>}
           <Link href="/" target="_blank">Lihat situs ↗</Link>
         </nav>
         <div className="admin-user">

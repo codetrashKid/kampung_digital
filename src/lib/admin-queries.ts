@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { slugify, type AnnouncementInput, type BusinessInput, type EventInput } from "./validation";
+import { slugify, type AnnouncementInput, type BusinessInput, type EventInput, type ReleaseInput } from "./validation";
 
 // Query khusus panel admin. Semua query ke tabel ber-community_id WAJIB memfilternya.
 
@@ -49,8 +49,20 @@ export type AdminReport = {
   updated_at: Date;
 };
 
+export type AdminRelease = {
+  id: string;
+  platform: "android" | "ios";
+  version_name: string;
+  build_number: number;
+  download_url: string;
+  release_notes: string | null;
+  is_mandatory: boolean;
+  is_active: boolean;
+  created_at: Date;
+};
+
 export async function writeAudit(
-  communityId: string,
+  communityId: string | null,
   actorId: string | null,
   action: string,
   entityType: string,
@@ -294,5 +306,56 @@ export async function setReportPublic(communityId: string, id: string, isPublic:
   const rows = await sql`
     update reports set is_public = ${isPublic}
     where community_id = ${communityId} and id = ${id} and deleted_at is null returning id`;
+  return rows.length > 0;
+}
+
+// ---------- Rilis aplikasi (tingkat platform, tanpa community_id) ----------
+
+export async function adminListReleases() {
+  const sql = getDb();
+  return sql<AdminRelease[]>`
+    select id, platform, version_name, build_number, download_url, release_notes, is_mandatory, is_active, created_at
+    from app_releases where deleted_at is null
+    order by platform, build_number desc limit 200`;
+}
+
+export async function adminGetRelease(id: string) {
+  const sql = getDb();
+  const rows = await sql<AdminRelease[]>`
+    select id, platform, version_name, build_number, download_url, release_notes, is_mandatory, is_active, created_at
+    from app_releases where id = ${id} and deleted_at is null limit 1`;
+  return rows[0] ?? null;
+}
+
+export async function createRelease(createdBy: string, v: ReleaseInput): Promise<string> {
+  const sql = getDb();
+  const [row] = await sql<{ id: string }[]>`
+    insert into app_releases (platform, version_name, build_number, download_url, release_notes, is_mandatory, is_active, created_by)
+    values (${v.platform}::app_platform, ${v.version_name}, ${v.build_number}, ${v.download_url}, ${v.release_notes},
+            ${v.is_mandatory}, ${v.is_active}, ${createdBy})
+    returning id`;
+  return row.id;
+}
+
+/** Platform dan nomor build tidak bisa diubah setelah dibuat. */
+export async function updateRelease(id: string, v: ReleaseInput): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`
+    update app_releases set version_name = ${v.version_name}, download_url = ${v.download_url},
+      release_notes = ${v.release_notes}, is_mandatory = ${v.is_mandatory}, is_active = ${v.is_active}
+    where id = ${id} and deleted_at is null returning id`;
+  return rows.length > 0;
+}
+
+export async function setReleaseActive(id: string, active: boolean): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`
+    update app_releases set is_active = ${active} where id = ${id} and deleted_at is null returning id`;
+  return rows.length > 0;
+}
+
+export async function softDeleteRelease(id: string): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`update app_releases set deleted_at = now() where id = ${id} and deleted_at is null returning id`;
   return rows.length > 0;
 }

@@ -30,10 +30,14 @@ export default function ActionForm({ action, submitLabel, cancelHref, children }
 
   useEffect(() => {
     if (!state?.errors.length || !formRef.current) return;
-    for (const [name, value] of submitted.current) {
-      const el = formRef.current.elements.namedItem(name);
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
-        el.value = value;
+    const sent = new Map(submitted.current);
+    for (const el of Array.from(formRef.current.elements)) {
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) continue;
+      if (!el.name || el.name === "password") continue;
+      if (el instanceof HTMLInputElement && el.type === "checkbox") {
+        el.checked = sent.has(el.name); // kotak yang tidak dicentang tidak ikut terkirim
+      } else if (sent.has(el.name)) {
+        el.value = sent.get(el.name)!;
       }
     }
   }, [state]);

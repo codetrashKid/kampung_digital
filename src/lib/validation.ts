@@ -225,3 +225,54 @@ export function parseReport(g: Getter): Result<ReportInput> {
     },
   };
 }
+
+// ---------- Rilis aplikasi mobile ----------
+
+export type ReleaseInput = {
+  platform: "android" | "ios";
+  version_name: string;
+  build_number: number;
+  download_url: string;
+  release_notes: string | null;
+  is_mandatory: boolean;
+  is_active: boolean;
+};
+
+/** Hanya tautan https dengan host bertitik (mis. https://github.com/...). */
+export function isHttpsUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    return u.protocol === "https:" && u.hostname.includes(".") && !u.username && !u.password;
+  } catch {
+    return false;
+  }
+}
+
+export function parseRelease(g: Getter): Result<ReleaseInput> {
+  const platform = text(g, "platform");
+  const version = text(g, "version_name");
+  const buildRaw = text(g, "build_number");
+  const url = text(g, "download_url");
+  const notes = text(g, "release_notes");
+  const build = /^\d{1,10}$/.test(buildRaw) ? Number(buildRaw) : NaN;
+  const errors = collect([
+    platform === "android" || platform === "ios" ? null : "Pilih platform.",
+    /^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(version) ? null : "Versi harus berformat 1.2.3 (boleh 1.2.3-beta.1).",
+    Number.isInteger(build) && build > 0 && build <= 2_147_483_647 ? null : "Nomor build harus bilangan bulat positif.",
+    url.length > 500 ? "Tautan unduhan maksimal 500 karakter." : isHttpsUrl(url) ? null : "Tautan unduhan harus diawali https://.",
+    lengthError("Catatan rilis", notes, 0, 2000),
+  ]);
+  if (errors.length) return { ok: false, errors };
+  return {
+    ok: true,
+    value: {
+      platform: platform as "android" | "ios",
+      version_name: version,
+      build_number: build,
+      download_url: url,
+      release_notes: notes || null,
+      is_mandatory: g.get("is_mandatory") === "on",
+      is_active: g.get("is_active") === "on",
+    },
+  };
+}

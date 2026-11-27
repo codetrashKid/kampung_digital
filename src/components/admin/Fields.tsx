@@ -61,3 +61,14 @@ export function SelectField(p: { name: string; label: string; options: Opt[]; de
 export function StatusField({ defaultValue = "active" }: { defaultValue?: string }) {
   return <SelectField name="status" label="Status" options={STATUS_OPTIONS} defaultValue={defaultValue} required />;
 }
+
+export function CheckboxField(p: { name: string; label: string; defaultChecked?: boolean; hint?: string }) {
+  return (
+    <div className="field field-check">
+      <label htmlFor={p.name}>
+        <input id={p.name} name={p.name} type="checkbox" defaultChecked={p.defaultChecked} /> {p.label}
+      </label>
+      {p.hint && <span className="hint">{p.hint}</span>}
+    </div>
+  );
+}

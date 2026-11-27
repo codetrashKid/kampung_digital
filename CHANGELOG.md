@@ -8,6 +8,9 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 ## [Belum dirilis]
 
 ### Ditambahkan
+- **Sistem versi dan update wajib aplikasi mobile**: endpoint `GET /api/v1/app-version?platform=&build=`; tabel `app_releases` (migrasi `0005_app_releases.sql`, tingkat platform tanpa `community_id`); menu admin **Rilis aplikasi** (khusus `super_admin`: tambah, ubah, aktif/nonaktif, hapus, uji tautan); di aplikasi, `UpdateGate` mengunci layar bila ada rilis wajib dan menampilkan dialog bila opsional; gagal memeriksa tidak mengunci pengguna.
+- CI mobile: nomor build = `github.run_number` (diteruskan ke `--build-number` dan `--dart-define=BUILD_NUMBER`), nama artefak memuat nomor build, ringkasan job berisi langkah rilis; dukungan kunci tanda tangan Android tetap lewat GitHub Secrets (`ANDROID_KEYSTORE_BASE64`, dst.) di `prepare_platforms.sh`.
+- Tes: web (endpoint versi, validasi rilis; total 77) dan Flutter (klien API, `UpdateGate` wajib/opsional/gagal/build 0).
 - **Halaman publik daftar laporan** `/laporan`: kartu laporan dengan filter status dan jenis; beranda menampilkan 3 laporan terbaru. Hanya laporan yang **disetujui pengurus** (tombol "Tampilkan ke publik" di detail laporan) dan tidak ditolak yang tampil; nama dan nomor pelapor tidak pernah dimuat ke halaman publik.
 - Migrasi `0004_reports_public.sql`: kolom `reports.is_public` (bawaan tidak publik).
 - **Tema Jakarta**: langit senja dengan siluet kota (Monas, Wisma 46, gedung-gedung) di hero beranda dan halaman login, serta garis siluet tipis di atas footer (`public/jakarta-skyline.svg`).

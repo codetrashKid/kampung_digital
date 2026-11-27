@@ -10,9 +10,10 @@ Portal web (dan nanti aplikasi mobile) yang menghubungkan warga dengan usaha dan
 
 - Beranda lingkungan: profil, pengumuman, usaha terpopuler
 - Direktori usaha: pencarian nama, filter kategori, detail usaha, jam buka, tombol pesan via WhatsApp
-- API JSON `/api/v1/businesses` dan `/api/v1/health` (akan dipakai aplikasi Flutter)
+- API JSON `/api/v1/businesses`, `/api/v1/health`, dan `/api/v1/app-version` (cek versi/update wajib), dipakai aplikasi Flutter
 - **Panel admin (CMS)** di `/admin`: kelola usaha, pengumuman, agenda, dan laporan warga
 - **Laporan warga**: warga melapor di `/lapor` tanpa login, pengurus menindaklanjuti di panel, dan laporan yang disetujui tampil di `/laporan`
+- **Sistem rilis aplikasi**: pengecekan versi, update wajib/opsional, dikelola dari panel admin
 - Tema visual Jakarta (siluet kota senja dengan Monas)
 - Aplikasi mobile Flutter (Android dan iOS): cari usaha, lihat detail, pesan via WhatsApp
 - Unit test web (Vitest) dan mobile (flutter test), dijalankan otomatis di GitHub Actions
@@ -85,6 +86,31 @@ Tanpa `DATABASE_URL`, aplikasi tetap berjalan dan menampilkan petunjuk pengatura
 └── LICENSE
 ```
 
+## Rilis aplikasi dan update wajib
+
+Aplikasi mobile menanyakan server setiap dibuka (`GET /api/v1/app-version?platform=android&build=12`).
+- Ada rilis **wajib** yang lebih baru: layar aplikasi terkunci sampai pengguna menekan "Perbarui sekarang" (membuka tautan unduhan).
+- Ada rilis **opsional**: muncul dialog "Pembaruan tersedia" yang bisa ditutup.
+- Server tidak terjangkau atau error: aplikasi **tetap jalan** (supaya server mati tidak mengunci semua orang). Build pengembangan (`flutter run` biasa, build 0) tidak diperiksa.
+
+**Cara menerbitkan versi baru (hanya `super_admin`):**
+1. Ubah `version:` di `mobile/pubspec.yaml` bila perlu (mis. `0.2.0+1`), lalu `git push`. CI membangun aplikasi dengan **nomor build = nomor run GitHub Actions** (selalu naik). Nomor itu ada di nama artefak (`kampung-digital-apk-build-N`) dan di ringkasan job.
+2. Unduh artefak APK, lalu unggah ke tempat unduhan yang berupa tautan **https** langsung ke file (paling mudah: buat **Release** di GitHub repositori ini dan lampirkan APK).
+3. Buka **Panel Admin > Rilis aplikasi > Rilis baru**: pilih platform, isi versi, nomor build (sama dengan N di atas), tautan unduhan, dan catatan rilis. Centang **Update wajib** bila versi lama harus dikunci. Klik **Uji tautan** di daftar untuk memastikan unduhan berjalan **sebelum** mewajibkan.
+4. Salah mewajibkan? Klik **Nonaktifkan** pada rilis itu; kunci langsung dicabut (hingga 1 menit karena cache).
+
+**iOS:** file `.zip` hasil CI belum ditandatangani sehingga tidak bisa dipasang di iPhone. Untuk pengguna, build harus ditandatangani dan didistribusikan lewat TestFlight atau App Store (perlu akun Apple Developer berbayar, belum disiapkan). Tautan TestFlight/App Store itulah yang diisikan sebagai tautan unduhan rilis iOS.
+
+### Kunci tanda tangan Android (wajib agar update bisa terpasang)
+Android hanya mau memperbarui aplikasi bila APK baru ditandatangani **kunci yang sama** dengan yang terpasang. Tanpa secret di bawah, CI memakai kunci debug acak yang berbeda di tiap build, sehingga update gagal ("aplikasi tidak terpasang"). Buat kunci **sekali saja** dan simpan cadangannya dengan aman (jika hilang, pengguna harus mencopot-pasang aplikasi):
+
+```bash
+keytool -genkey -v -keystore release.jks -alias kampung -keyalg RSA -keysize 2048 -validity 10000
+# PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) | Set-Clipboard
+# macOS/Linux: base64 -w0 release.jks
+```
+Di GitHub: Settings > Secrets and variables > Actions > **Secrets**, tambahkan `ANDROID_KEYSTORE_BASE64` (isi base64 tadi), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`kampung`), dan `ANDROID_KEY_PASSWORD`. **Jangan commit `release.jks`.** Memasang APK dari tautan di luar Play Store juga mengharuskan pengguna mengizinkan "pasang aplikasi dari sumber tidak dikenal".
+
 ## Panel admin (CMS)
 
 Buka `/admin` (tautan "Masuk pengurus" ada di footer). Yang bisa dikelola: **usaha** (tambah, ubah, tayangkan atau sembunyikan, hapus), **pengumuman**, **agenda**, dan **laporan warga** (lihat dan ubah status). Hanya `super_admin` platform, atau `admin_lingkungan`/`pengurus` aktif di lingkungan ini, yang bisa masuk. Penghapusan bersifat lembut (data tidak hilang dari database).
@@ -92,6 +118,7 @@ Buka `/admin` (tautan "Masuk pengurus" ada di footer). Yang bisa dikelola: **usa
 - Sandi disimpan sebagai hash scrypt; sesi memakai cookie HttpOnly bertanda tangan. Di Vercel, isi `AUTH_SECRET` di Environment Variables.
 - Laporan warga masuk lewat `/lapor` tanpa login. Nama dan nomor HP pelapor opsional dan hanya terlihat pengurus; ada kolom jebakan bot dan batas 5 laporan per jam per jaringan.
 - Laporan baru **tidak otomatis tampil publik**: pengurus menyetujuinya lewat tombol "Tampilkan ke publik" (mencegah spam dan tuduhan). Nama dan nomor pelapor tidak pernah ditampilkan.
+- Menu **Rilis aplikasi** (khusus `super_admin`) mengelola versi aplikasi mobile dan update wajib (lihat bagian di atas).
 - Belum ada: tanggapan pengurus, foto laporan, unggah foto, edit jam buka, pembatasan percobaan login per IP, dan login OTP untuk warga (tahap berikutnya).
 
 ## Aplikasi mobile (Flutter)

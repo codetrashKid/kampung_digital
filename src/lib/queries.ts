@@ -1,3 +1,4 @@
+import type { LatestRelease } from "./app-version";
 import { getDb } from "./db";
 
 export type Community = {
@@ -210,4 +211,24 @@ export async function countPublicReportsByStatus(communityId: string): Promise<R
     where community_id = ${communityId} and is_public and deleted_at is null and status <> 'ditolak'
     group by status`;
   return Object.fromEntries(rows.map((r) => [r.status, r.n]));
+}
+
+// ---------- Rilis aplikasi mobile ----------
+
+/** Rilis aktif terbaru yang lebih baru dari build klien, beserta penanda apakah ada rilis wajib di atas build klien. */
+export async function getLatestReleaseAbove(platform: string, build: number): Promise<LatestRelease | null> {
+  const sql = getDb();
+  const rows = await sql<LatestRelease[]>`
+    select r.version_name, r.build_number, r.download_url, r.release_notes, r.created_at,
+           coalesce((
+             select bool_or(m.is_mandatory) from app_releases m
+             where m.platform = ${platform}::app_platform and m.build_number > ${build}
+               and m.is_active and m.deleted_at is null
+           ), false) as required
+    from app_releases r
+    where r.platform = ${platform}::app_platform and r.build_number > ${build}
+      and r.is_active and r.deleted_at is null
+    order by r.build_number desc
+    limit 1`;
+  return rows[0] ?? null;
 }

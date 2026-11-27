@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/business.dart';
+import '../models/update_status.dart';
 
 /// Kesalahan saat memanggil API, dengan pesan yang aman ditampilkan ke warga.
 class ApiException implements Exception {
@@ -54,6 +55,26 @@ class ApiClient {
       return data
           .map((e) => Business.fromJson(e as Map<String, dynamic>))
           .toList();
+    } catch (_) {
+      throw const ApiException('Respons server tidak dapat dibaca.');
+    }
+  }
+
+  /// Menanyakan server apakah ada versi aplikasi yang lebih baru untuk [platform] ('android' / 'ios').
+  Future<UpdateStatus> checkAppVersion({required String platform, required int build}) async {
+    final uri = Uri.parse('$baseUrl/api/v1/app-version')
+        .replace(queryParameters: {'platform': platform, 'build': '$build'});
+
+    final http.Response res;
+    try {
+      res = await _http.get(uri).timeout(const Duration(seconds: 6));
+    } catch (_) {
+      throw const ApiException('Tidak dapat memeriksa pembaruan.');
+    }
+    if (res.statusCode != 200) throw ApiException(_errorMessage(res));
+    try {
+      return UpdateStatus.fromJson(
+          jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>);
     } catch (_) {
       throw const ApiException('Respons server tidak dapat dibaca.');
     }

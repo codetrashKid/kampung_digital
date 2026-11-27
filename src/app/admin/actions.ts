@@ -5,9 +5,13 @@ import {
   createAnnouncement,
   createBusiness,
   createEvent,
+  createRelease,
   setBusinessStatus,
   setReportPublic,
+  setReleaseActive,
   setReportStatus,
+  softDeleteRelease,
+  updateRelease,
   softDeleteAnnouncement,
   softDeleteBusiness,
   softDeleteEvent,
@@ -16,11 +20,11 @@ import {
   updateEvent,
   writeAudit,
 } from "@/lib/admin-queries";
-import { endSession, isAuthConfigured, loadAdmin, requireAdmin, startSession } from "@/lib/auth";
+import { endSession, isAuthConfigured, loadAdmin, requireAdmin, requireSuperAdmin, startSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { getCurrentCommunity } from "@/lib/queries";
-import { PUBLISH_STATUSES, REPORT_STATUSES, isUuid, parseAnnouncement, parseBusiness, parseEvent } from "@/lib/validation";
+import { PUBLISH_STATUSES, REPORT_STATUSES, isUuid, parseAnnouncement, parseBusiness, parseEvent, parseRelease } from "@/lib/validation";
 
 export type FormState = { errors: string[] } | null;
 
@@ -113,6 +117,52 @@ export async function deleteBusinessAction(id: string): Promise<void> {
   if (!(await softDeleteBusiness(community.id, id))) notFound();
   await writeAudit(community.id, user.id, "business.delete", "business", id);
   redirect("/admin/usaha?pesan=dihapus");
+}
+
+// ---------- Rilis aplikasi (khusus super_admin) ----------
+
+export async function saveReleaseAction(id: string | null, _prev: FormState, formData: FormData): Promise<FormState> {
+  const { user, community } = await requireSuperAdmin();
+  if (id) requireId(id);
+  const parsed = parseRelease(formData);
+  if (!parsed.ok) return { errors: parsed.errors };
+  try {
+    let entityId = id;
+    if (id) {
+      if (!(await updateRelease(id, parsed.value))) notFound();
+    } else {
+      entityId = await createRelease(user.id, parsed.value);
+    }
+    await writeAudit(community.id, user.id, id ? "release.update" : "release.create", "app_release", entityId!, {
+      platform: parsed.value.platform,
+      build: String(parsed.value.build_number),
+      mandatory: String(parsed.value.is_mandatory),
+    });
+  } catch (err) {
+    if (isNextControl(err)) throw err;
+    if ((err as { code?: string }).code === "23505") {
+      return { errors: [`Build ${parsed.value.build_number} untuk ${parsed.value.platform} sudah ada.`] };
+    }
+    console.error(err);
+    return { errors: [GENERIC_ERROR] };
+  }
+  redirect("/admin/rilis?pesan=tersimpan");
+}
+
+export async function setReleaseActiveAction(id: string, active: boolean): Promise<void> {
+  const { user, community } = await requireSuperAdmin();
+  requireId(id);
+  if (!(await setReleaseActive(id, active))) notFound();
+  await writeAudit(community.id, user.id, "release.active", "app_release", id, { active: String(active) });
+  redirect("/admin/rilis?pesan=tersimpan");
+}
+
+export async function deleteReleaseAction(id: string): Promise<void> {
+  const { user, community } = await requireSuperAdmin();
+  requireId(id);
+  if (!(await softDeleteRelease(id))) notFound();
+  await writeAudit(community.id, user.id, "release.delete", "app_release", id);
+  redirect("/admin/rilis?pesan=dihapus");
 }
 
 // ---------- Laporan warga ----------

@@ -112,4 +112,54 @@ void main() {
         (req) async => http.Response(jsonEncode({'data': 'bukan list'}), 200));
     expect(api.listBusinesses(), throwsA(isA<ApiException>()));
   });
+
+  group('checkAppVersion', () {
+    test('mengirim platform dan build, lalu membaca respons', () async {
+      late Uri captured;
+      final api = _clientWith((req) async {
+        captured = req.url;
+        return http.Response(
+          jsonEncode({
+            'platform': 'android',
+            'current_build': 2,
+            'update_available': true,
+            'update_required': true,
+            'latest': {
+              'version': '0.3.0',
+              'build': 7,
+              'url': 'https://contoh.com/app.apk',
+              'notes': null,
+              'published_at': '2026-11-27T00:00:00.000Z',
+            },
+          }),
+          200,
+        );
+      });
+      final status = await api.checkAppVersion(platform: 'android', build: 2);
+      expect(captured.path, '/api/v1/app-version');
+      expect(captured.queryParameters, {'platform': 'android', 'build': '2'});
+      expect(status.updateAvailable, isTrue);
+      expect(status.updateRequired, isTrue);
+      expect(status.latestVersion, '0.3.0');
+      expect(status.latestBuild, 7);
+      expect(status.url, 'https://contoh.com/app.apk');
+      expect(status.notes, isNull);
+    });
+
+    test('latest null berarti tidak ada pembaruan', () async {
+      final api = _clientWith((req) async => http.Response(
+          jsonEncode({'update_available': false, 'update_required': false, 'latest': null}), 200));
+      final status = await api.checkAppVersion(platform: 'ios', build: 9);
+      expect(status.updateAvailable, isFalse);
+      expect(status.updateRequired, isFalse);
+      expect(status.url, isNull);
+    });
+
+    test('status bukan 200 dan jaringan putus menjadi ApiException', () async {
+      final bad = _clientWith((req) async => http.Response(jsonEncode({'error': 'x'}), 500));
+      expect(bad.checkAppVersion(platform: 'android', build: 1), throwsA(isA<ApiException>()));
+      final offline = _clientWith((req) async => throw http.ClientException('x'));
+      expect(offline.checkAppVersion(platform: 'android', build: 1), throwsA(isA<ApiException>()));
+    });
+  });
 }

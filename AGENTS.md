@@ -64,7 +64,7 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 
 ## Ruang lingkup saat ini
 
-Sudah ada: laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
+Sudah ada: sistem rilis aplikasi dan update wajib, laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
 Berikutnya (Tahap 2): login OTP untuk warga, pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
 Ditunda: pembayaran online, chat dalam aplikasi, iuran, surat pengantar, bank sampah.
 
@@ -82,3 +82,5 @@ Tambahkan keputusan penting di bawah ini (tanggal, keputusan, alasan singkat).
 - 2026-11-27: Laporan warga memakai form publik tanpa login (nama/HP opsional) dengan anti-spam kolom jebakan + batas per jam berbasis hash IP, karena login warga (OTP) belum ada. Setelah OTP tersedia, pertimbangkan mewajibkan login.
 - 2026-11-27: Laporan warga baru bersifat privat (`reports.is_public = false`); hanya yang disetujui pengurus tampil di `/laporan`, dan data pelapor tidak pernah ikut ke halaman publik. Alasan: form tanpa login rawan spam dan tuduhan.
 - 2026-11-27: Tema visual "Jakarta" (siluet kota senja) pada hero dan login; aset di `public/jakarta-skyline.svg`, warna merek tetap hijau.
+- 2026-11-27: Update wajib aplikasi: server menyimpan daftar rilis (`app_releases`, tingkat platform tanpa `community_id`, hanya `super_admin`); klien mengirim `platform` dan nomor build, server menjawab rilis aktif terbaru dan apakah ada rilis wajib di atas build klien. Klien gagal-terbuka (jika pengecekan error, aplikasi tetap jalan) dan melewati pengecekan pada build 0 (pengembangan). Nomor build = nomor run GitHub Actions. File APK tidak disimpan di server: admin mengisi tautan https unduhan.
+- 2026-11-27: Update Android hanya bisa terpasang bila APK memakai kunci tanda tangan yang sama; kunci rilis tetap disuntik di CI lewat GitHub Secrets. iOS butuh TestFlight/App Store (akun Apple Developer) untuk distribusi ke pengguna.

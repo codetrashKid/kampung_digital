@@ -227,3 +227,6 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.97rem; }
 .report-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.field-check label { display: flex; gap: 10px; align-items: center; font-weight: 600; }
+.field-check input { width: 22px; height: 22px; flex: none; }
+.pill-wajib { background: #fde2e0; color: #8f1f19; }

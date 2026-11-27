@@ -72,3 +72,4 @@ Web berjalan di Vercel, database di layanan Postgres terkelola yang punya paket 
 | `0002_admin_auth.sql` | `users.password_hash` (format `scrypt$salt$hash`) untuk login admin email + sandi |
 | `0003_reports.sql` | Tabel `reports` (laporan warga) dan tipe `report_status`; `ip_hash` hanya untuk pembatasan spam |
 | `0004_reports_public.sql` | `reports.is_public` (moderasi tampil publik, bawaan `false`) |
+| `0005_app_releases.sql` | Tabel `app_releases` dan tipe `app_platform` (rilis aplikasi mobile; global, tanpa `community_id`) |

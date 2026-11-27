@@ -11,6 +11,9 @@ on:
 env:
   # Alamat API untuk build rilis. Atur di Settings > Secrets and variables > Actions > Variables.
   API_BASE_URL: ${{ vars.API_BASE_URL || 'https://example.invalid' }}
+  # Nomor build = nomor run workflow (selalu naik). Dipakai aplikasi untuk cek "update wajib"
+  # dan harus diisikan ke Panel Admin > Rilis aplikasi saat menerbitkan rilis.
+  BUILD_NUMBER: ${{ github.run_number }}
 
 jobs:
   test:
@@ -50,13 +53,42 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: bash tool/prepare_platforms.sh
+      - name: Baca nama versi dari pubspec.yaml
+        id: ver
+        run: echo "name=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')" >> "$GITHUB_OUTPUT"
+      - name: Siapkan platform dan tanda tangan rilis
+        run: bash tool/prepare_platforms.sh
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       - run: flutter pub get
-      - run: flutter build apk --release --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
+      - name: Build APK
+        run: >
+          flutter build apk --release
+          --build-name=${{ steps.ver.outputs.name }}
+          --build-number=${{ env.BUILD_NUMBER }}
+          --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
+          --dart-define=BUILD_NUMBER=${{ env.BUILD_NUMBER }}
+          --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
       - uses: actions/upload-artifact@v4
         with:
-          name: kampung-digital-apk
+          name: kampung-digital-apk-build-${{ env.BUILD_NUMBER }}
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
+      - name: Ringkasan rilis
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          {
+            echo "### APK Android siap dirilis"
+            echo "- Versi: **${{ steps.ver.outputs.name }}**"
+            echo "- Nomor build: **${{ env.BUILD_NUMBER }}**"
+            if [ -z "$KEYSTORE_B64" ]; then
+              echo "- ⚠️ **Belum ada kunci tanda tangan tetap** (secret ANDROID_KEYSTORE_BASE64 kosong). APK ini tidak bisa dipasang sebagai update di atas versi sebelumnya. Lihat README > Kunci tanda tangan Android."
+            fi
+            echo "- Langkah: unduh artefak, unggah APK ke tempat unduhan (mis. GitHub Release), lalu isi **Panel Admin > Rilis aplikasi > Rilis baru** dengan versi, build, dan tautan itu."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build-ios:
     name: Build iOS (tanpa code signing)
@@ -71,14 +103,31 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Baca nama versi dari pubspec.yaml
+        id: ver
+        run: echo "name=$(grep '^version:' pubspec.yaml | sed -E 's/version: *([^+ ]+).*/\1/')" >> "$GITHUB_OUTPUT"
       - run: bash tool/prepare_platforms.sh
       - run: flutter pub get
-      - run: flutter build ios --release --no-codesign --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
+      - name: Build iOS
+        run: >
+          flutter build ios --release --no-codesign
+          --build-name=${{ steps.ver.outputs.name }}
+          --build-number=${{ env.BUILD_NUMBER }}
+          --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
+          --dart-define=BUILD_NUMBER=${{ env.BUILD_NUMBER }}
+          --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
       - name: Kemas Runner.app
         run: |
           cd build/ios/iphoneos
           zip -r -q "$GITHUB_WORKSPACE/KampungDigital-ios-unsigned.zip" Runner.app
       - uses: actions/upload-artifact@v4
         with:
-          name: kampung-digital-ios-unsigned
+          name: kampung-digital-ios-unsigned-build-${{ env.BUILD_NUMBER }}
           path: KampungDigital-ios-unsigned.zip
+      - name: Ringkasan rilis
+        run: |
+          {
+            echo "### Build iOS (tanpa tanda tangan)"
+            echo "- Versi: **${{ steps.ver.outputs.name }}**, nomor build: **${{ env.BUILD_NUMBER }}**"
+            echo "- File ini belum bisa dipasang di iPhone. Untuk pengguna, build harus ditandatangani dan didistribusikan lewat TestFlight/App Store (perlu akun Apple Developer); tautan TestFlight/App Store itulah yang diisi di Panel Admin > Rilis aplikasi."
+          } >> "$GITHUB_STEP_SUMMARY"
