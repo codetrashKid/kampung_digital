@@ -56,6 +56,8 @@ export default function AdminShell({ userName, roleLabel, communityName, isSuper
           <NavLink href="/admin/agenda" label="Agenda" icon="calendar" className="nav-item" onClick={close} />
           <div className="nav-group">Warga</div>
           <NavLink href="/admin/laporan" label="Laporan warga" icon="flag" className="nav-item" onClick={close} />
+          <NavLink href="/admin/warga" label="Data warga" icon="users" className="nav-item" onClick={close} />
+          <NavLink href="/admin/undangan" label="Kode undangan" icon="shield" className="nav-item" onClick={close} />
           {isSuperAdmin && (
             <>
               <div className="nav-group">Platform</div>

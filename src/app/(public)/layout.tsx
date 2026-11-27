@@ -1,8 +1,10 @@
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import NavLink from "@/components/NavLink";
+import { hasSessionCookie } from "@/lib/auth";
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const loggedIn = await hasSessionCookie();
   return (
     <>
       <a href="#isi" className="skip-link">Lewati ke isi halaman</a>
@@ -16,6 +18,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <NavLink href="/" label="Beranda" icon="home" />
             <NavLink href="/usaha" label="Usaha & Jasa" icon="store" />
             <NavLink href="/laporan" label="Laporan" icon="flag" />
+            <NavLink href={loggedIn ? "/akun" : "/masuk"} label={loggedIn ? "Akun saya" : "Masuk"} icon="users" />
             <NavLink href="/lapor" label="Buat laporan" exact className="top-cta" />
           </nav>
         </div>
@@ -32,11 +35,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/usaha">Cari usaha</Link>
             <Link href="/laporan">Laporan warga</Link>
             <Link href="/lapor">Lapor ke pengurus</Link>
+            {loggedIn ? <Link href="/akun">Akun saya</Link> : <><Link href="/masuk">Masuk warga</Link><Link href="/daftar">Daftar warga</Link></>}
+            <Link href="/privasi">Kebijakan privasi</Link>
             <Link href="/admin">Masuk pengurus</Link>
           </div>
         </div>
       </footer>
-      <BottomNav />
+      <BottomNav loggedIn={loggedIn} />
     </>
   );
 }

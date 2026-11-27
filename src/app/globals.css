@@ -69,7 +69,7 @@ h3 { font-size: 1.08rem; margin: 0.3em 0; font-weight: 700; }
 .top-nav a.top-cta.active { background: var(--brand-dark); color: #fff; }
 @media (min-width: 760px) { .top-nav { display: flex; } }
 
-.bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+.bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
 .bn-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; text-decoration: none; color: var(--muted); font-size: 0.74rem; font-weight: 600; border-radius: 12px; }
 .bn-item.active { color: var(--brand); }
 .bn-item.bn-cta { color: #fff; background: var(--brand); margin: 2px 6px; box-shadow: 0 6px 14px rgba(15, 107, 74, 0.35); }
@@ -321,3 +321,15 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.96rem; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Warga: form dan teks panjang ---------- */
+.fieldset { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px 16px 4px; margin: 0; display: grid; gap: 18px; }
+.fieldset legend { padding: 0 8px; font-weight: 700; font-size: 0.95rem; }
+.fieldset .field-row .field-row { gap: 12px; }
+.prose h2 { margin-top: 1.6em; font-size: 1.15rem; }
+.prose ul { padding-left: 1.2em; }
+.prose li { margin: 6px 0; }
+.filters-select { padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; background: var(--surface); }
+.card-box .form { border: 0; box-shadow: none; padding: 0; max-width: none; border-radius: 0; }
+.field-row .field-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+.code-cell { letter-spacing: 0.08em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }

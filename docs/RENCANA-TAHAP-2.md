@@ -27,7 +27,7 @@ Fase D  Aplikasi mobile (login, chat, profil, notifikasi)
 - [x] Diuji di desktop dan ponsel (tangkapan layar), tes (87) dan build lolos.
 - [ ] (Opsional, belum) mode gelap, halaman detail laporan publik, ilustrasi untuk keadaan kosong.
 
-## Keputusan yang dibutuhkan sebelum Fase B
+## Keputusan (dicatat)
 
 Isi jawaban di sini (atau katakan di chat):
 
@@ -35,36 +35,39 @@ Isi jawaban di sini (atau katakan di chat):
    - **A. Email + sandi, disetujui pengurus** (direkomendasikan, tanpa layanan baru): warga mendaftar, status "menunggu", pengurus menyetujui.
    - **B. Kode undangan dari pengurus + nomor HP + sandi**: pengurus membagikan kode (via grup WhatsApp RT), warga mendaftar sendiri; otomatis terhubung ke lingkungan. Lebih mudah untuk lansia, tanpa layanan baru.
    - **C. OTP WhatsApp/SMS**: paling praktis bagi warga, tetapi butuh penyedia pihak ketiga berbayar per pesan. AGENTS.md melarang menambah layanan berbayar tanpa izin Anda.
-   - Jawaban: _belum diputuskan_
+   - **Jawaban: B (kode undangan + nomor HP + sandi), diputuskan 27 Nov 2026.**
 2. **Data warga apa yang disimpan** (usul minimal, sesuai UU PDP): nama lengkap, nomor HP, alamat/blok dan nomor rumah, RT/RW. Opsional: jumlah anggota keluarga. **Tidak** menyimpan NIK/KK kecuali ada kebutuhan hukum yang jelas.
-   - Jawaban: _belum diputuskan_
+   - Jawaban: _belum dijawab; dipakai usulan awal (nama, nomor HP, alamat/blok, RT/RW; tanpa NIK/KK)._
 3. **Siapa boleh melihat data warga**: usul hanya pengurus dan admin; warga lain hanya melihat nama + blok bila warga setuju ("tampil di direktori warga").
-   - Jawaban: _belum diputuskan_
+   - Jawaban: _belum dijawab; dipakai usulan awal (hanya pengurus; warga lain lihat nama + blok bila setuju)._
 4. **Chat**: siapa boleh membuat grup (semua warga atau hanya pengurus)? Apakah ada saluran pengumuman satu arah (hanya pengurus yang menulis)?
-   - Jawaban: _belum diputuskan_
+   - Jawaban: _belum dijawab; diputuskan saat Fase C dimulai._
 5. **Cara pesan chat tampil real-time di Vercel** (Vercel tidak mendukung koneksi WebSocket yang terus terbuka):
    - **Polling** (aplikasi bertanya tiap beberapa detik): paling sederhana, tanpa layanan baru, cukup untuk skala RT/RW.
    - **Supabase Realtime**: pesan langsung muncul; masih satu penyedia dengan database, tetapi menambah kunci dan konfigurasi baru.
    - Usul: mulai dengan polling, pindah bila perlu.
-   - Jawaban: _belum diputuskan_
+   - Jawaban: _belum dijawab; diputuskan saat Fase C dimulai._
 
-## Fase B: Login warga dan data warga
+## Fase B: Login warga dan data warga  (INTI SELESAI 27 Nov 2026)
 
 Skema (migrasi baru, jangan ubah migrasi lama):
 
-- [ ] `0006_residents.sql`: profil warga per lingkungan (blok/alamat, RT/RW, persetujuan tampil di direktori, `consented_at`), status keanggotaan sudah ada di `community_members` (`pending|active|suspended`).
-- [ ] Bila login metode B: tabel kode undangan (`invite_codes`: kode, lingkungan, kedaluwarsa, batas pakai, dibuat oleh).
-- [ ] Perbarui `docs/DATABASE.md`.
+- [x] `0006_residents.sql`: tabel `residents` (blok/alamat, RT/RW, persetujuan tampil di direktori, `consented_at`); status keanggotaan memakai `community_members` yang sudah ada.
+- [x] Tabel `invite_codes` (kode 8 karakter, batas pakai, kedaluwarsa, aktif/nonaktif) dan `auth_attempts` (pembatasan laju).
+- [x] `docs/DATABASE.md` diperbarui.
 
 Backend dan web:
 
-- [ ] Halaman daftar warga (`/daftar`) dengan persetujuan penggunaan data (teks UU PDP, tautan kebijakan privasi).
-- [ ] Halaman masuk warga (`/masuk`), keluar, lupa/ubah sandi. Sesi cookie terpisah dari admin atau peran dibedakan di sesi yang sama.
-- [ ] Pembatasan percobaan login per akun/IP (juga memperkuat login admin).
-- [ ] Halaman profil: ubah data sendiri, hapus akun (anonimkan data).
-- [ ] CMS "Data warga": daftar, cari, filter status; setujui, tangguhkan, ubah peran; ekspor terbatas; catatan audit setiap akses.
-- [ ] Halaman kebijakan privasi.
-- [ ] Tes unit (validasi, otorisasi, pembatasan login) dan uji end-to-end.
+- [x] Halaman `/daftar` dengan kode undangan dan persetujuan penggunaan data (tautan kebijakan privasi).
+- [x] Halaman `/masuk`, keluar, dan ganti sandi di `/akun`. Satu cookie sesi; peran dicek di server pada setiap halaman.
+- [ ] **Lupa sandi**: saat ini warga diminta menghubungi pengurus. Tambahkan fitur "atur ulang sandi oleh pengurus" (sandi sementara) di CMS.
+- [x] Pembatasan percobaan login per akun dan per IP (warga dan admin) serta tebak kode undangan per IP.
+- [x] Halaman `/akun`: ubah data sendiri, ganti sandi, hapus akun (anonimisasi, konfirmasi sandi).
+- [x] CMS "Data warga" (daftar, cari, filter, detail, tangguhkan/aktifkan, ubah peran sesuai hak) dan "Kode undangan" (buat, salin kode/tautan, nonaktifkan); pembukaan detail warga dicatat (`resident.view`).
+- [ ] Ekspor data warga terbatas (belum).
+- [ ] Halaman **direktori warga** (hanya untuk warga login; menampilkan nama + blok bagi yang setuju). Kolom `show_in_directory` sudah ada, halamannya belum.
+- [x] Halaman `/privasi` (draf; perlu ditinjau pihak yang paham hukum sebelum dipakai warga sungguhan).
+- [x] Tes unit (validasi, kode undangan, hak kelola, pembatasan laju; total 112) dan uji end-to-end di Chrome terhadap Supabase.
 
 ## Fase C: Chat
 
@@ -106,4 +109,4 @@ Fitur:
 
 1. Fase A (tampilan) → bisa dimulai sekarang.
 2. Jawab 5 keputusan di atas.
-3. Fase B → Fase C (web) → Fase D (mobile) → Fase E.
+3. Fase B (inti selesai; sisa: lupa sandi oleh pengurus, direktori warga, ekspor) → Fase C (web) → Fase D (mobile) → Fase E.

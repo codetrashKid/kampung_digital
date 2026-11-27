@@ -11,6 +11,8 @@ export function TextField(p: {
   hint?: string;
   type?: string;
   placeholder?: string;
+  autoComplete?: string;
+  inputMode?: "text" | "numeric" | "tel" | "email";
 }) {
   return (
     <div className="field">
@@ -23,6 +25,8 @@ export function TextField(p: {
         required={p.required}
         maxLength={p.maxLength}
         placeholder={p.placeholder}
+        autoComplete={p.autoComplete}
+        inputMode={p.inputMode}
       />
       {p.hint && <span className="hint">{p.hint}</span>}
     </div>

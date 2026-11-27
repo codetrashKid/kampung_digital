@@ -8,6 +8,13 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 ## [Belum dirilis]
 
 ### Ditambahkan
+- **Fase B: login warga dan data warga** (lihat `docs/RENCANA-TAHAP-2.md`):
+  - Pendaftaran warga dengan **kode undangan** dari pengurus (`/daftar`, tautan `?kode=`), login dengan nomor HP + sandi (`/masuk`), halaman `/akun` (ubah data, ganti sandi, hapus akun dengan anonimisasi), `/privasi` (draf kebijakan privasi).
+  - Migrasi `0006_residents.sql`: `invite_codes`, `residents`, `auth_attempts`.
+  - CMS: menu **Data warga** (daftar, cari, detail dengan pencatatan akses, tangguhkan/aktifkan, ubah peran sesuai hak) dan **Kode undangan** (buat dengan batas pakai/masa berlaku, salin kode atau tautan, nonaktifkan).
+  - Pembatasan percobaan login per akun dan per IP untuk warga dan admin, serta tebak kode undangan per IP (catatan disimpan sebagai hash).
+  - Menu publik menampilkan "Masuk" atau "Akun saya"; navigasi bawah ponsel menjadi 5 item.
+  - Tes baru untuk kode undangan, validasi pendaftaran/profil/sandi, pembatasan laju, dan hak kelola anggota (total 112).
 - **Sistem versi dan update wajib aplikasi mobile**: endpoint `GET /api/v1/app-version?platform=&build=`; tabel `app_releases` (migrasi `0005_app_releases.sql`, tingkat platform tanpa `community_id`); menu admin **Rilis aplikasi** (khusus `super_admin`: tambah, ubah, aktif/nonaktif, hapus, uji tautan); di aplikasi, `UpdateGate` mengunci layar bila ada rilis wajib dan menampilkan dialog bila opsional; gagal memeriksa tidak mengunci pengguna.
 - CI mobile: nomor build = `github.run_number` (diteruskan ke `--build-number` dan `--dart-define=BUILD_NUMBER`), nama artefak memuat nomor build, ringkasan job berisi langkah rilis; dukungan kunci tanda tangan Android tetap lewat GitHub Secrets (`ANDROID_KEYSTORE_BASE64`, dst.) di `prepare_platforms.sh`.
 - Tes: web (endpoint versi, validasi rilis; total 77) dan Flutter (klien API, `UpdateGate` wajib/opsional/gagal/build 0).
@@ -42,6 +49,7 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Form admin memulihkan isian (kecuali sandi) setelah error validasi.
 
 ### Keamanan
+- Kode undangan 8 karakter dari 32 huruf/angka (sekitar 10^12 kemungkinan), dipakai dalam transaksi dengan penguncian baris sehingga batas pemakaian tidak bisa dilewati oleh pendaftaran serentak; percobaan kode salah dibatasi per IP.
 - Login memverifikasi hash walau akun tidak ada (menyamarkan waktu respons) dan menunda 0,5 detik saat gagal. Belum ada pembatasan percobaan per IP; tambahkan sebelum dipakai publik.
 - Daftar laporan publik diuji di Chrome: laporan belum disetujui/ditolak tidak tampil, data pelapor tidak bocor di HTML, filter dan parameter ngawur aman, setujui/sembunyikan di admin berefek ke halaman publik.
 - Laporan warga: data pelapor minimal dan opsional, hanya terlihat pengurus; alur lapor dan ubah status diuji end-to-end di Chrome terhadap Supabase, termasuk kolom jebakan dan batas kiriman.

@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb, isDbConfigured } from "./db";
 import { getCurrentCommunity, type Community } from "./queries";
+import { getMyAccount } from "./resident-queries";
+import type { MemberRole } from "./resident";
 import { MIN_SECRET_LENGTH, SESSION_COOKIE, SESSION_TTL_MS, createSessionToken, verifySessionToken } from "./session";
 
 export type AdminContext = {
@@ -67,6 +69,37 @@ export const getAdmin = cache(async (): Promise<AdminContext | null> => {
   if (!community) return null;
   return loadAdmin(userId, community);
 });
+
+export type MemberContext = {
+  user: { id: string; full_name: string; phone: string; platform_role: string };
+  community: Community;
+  role: MemberRole;
+};
+
+/** Warga yang sedang login (anggota aktif lingkungan ini; dicek ulang ke database), atau null. */
+export const getMember = cache(async (): Promise<MemberContext | null> => {
+  if (!isDbConfigured() || !isAuthConfigured()) return null;
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const userId = verifySessionToken(token, getAuthSecret());
+  if (!userId) return null;
+  const community = await getCurrentCommunity();
+  if (!community) return null;
+  const acc = await getMyAccount(community.id, userId);
+  if (!acc) return null;
+  return { user: { id: acc.id, full_name: acc.full_name, phone: acc.phone, platform_role: acc.platform_role }, community, role: acc.role };
+});
+
+/** Wajib dipanggil di setiap halaman dan server action khusus warga. */
+export async function requireMember(): Promise<MemberContext> {
+  const member = await getMember();
+  if (!member) redirect("/masuk");
+  return member;
+}
+
+/** Hanya memeriksa keberadaan cookie sesi (tanpa database); untuk menampilkan "Masuk" atau "Akun" di menu. */
+export async function hasSessionCookie(): Promise<boolean> {
+  return Boolean((await cookies()).get(SESSION_COOKIE)?.value);
+}
 
 /** Wajib dipanggil di setiap halaman dan server action admin. */
 export async function requireAdmin(): Promise<AdminContext> {

@@ -26,7 +26,7 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 
 - **Multi-tenant**: setiap data milik lingkungan punya `community_id`. Setiap query ke tabel ber-`community_id` **wajib** memfilternya. Dilarang menaruh nama, slug, atau konfigurasi satu lingkungan secara hardcode di kode. Lingkungan aktif saat ini dibaca dari `getCurrentCommunity()` di `src/lib/queries.ts` (env `DEFAULT_COMMUNITY_SLUG`); nanti diganti berdasarkan subdomain.
 - **Satu API untuk dua klien**: web dan Flutter memakai API yang sama, berversi (`/api/v1/...`). Jangan membuat logika bisnis ganda di klien. Jangan mengubah bentuk respons API versi yang sudah ada; buat `/api/v2` bila perlu.
-- **Akses database hanya lewat `src/lib/db.ts`** (`getDb()`); query diletakkan di `src/lib/queries.ts` (publik) dan `src/lib/admin-queries.ts` (panel admin). Gunakan tagged template ``sql`...` `` dengan nilai berparameter. **Dilarang** menyusun SQL dengan penggabungan string dari input pengguna.
+- **Akses database hanya lewat `src/lib/db.ts`** (`getDb()`); query diletakkan di `src/lib/queries.ts` (publik), `src/lib/admin-queries.ts` (panel admin), dan `src/lib/resident-queries.ts` (warga, kode undangan, pembatasan laju). Gunakan tagged template ``sql`...` `` dengan nilai berparameter. **Dilarang** menyusun SQL dengan penggabungan string dari input pengguna.
 - **Next.js 15**: `params` dan `searchParams` adalah `Promise` (gunakan `await`). Halaman yang membaca database memakai `export const dynamic = "force-dynamic"` (atau `revalidate` yang disengaja) agar build tidak mengakses database.
 - **Validasi input** di sisi server untuk semua endpoint. Jangan percaya data dari klien; batasi `limit` dan panjang input.
 - **Otorisasi** dicek di server (`requireAdmin()` di setiap halaman dan server action admin; jangan mengandalkan layout saja) berdasarkan peran di `community_members` (`warga`, `penjual`, `pengurus`, `admin_lingkungan`) dan `users.platform_role`.
@@ -64,8 +64,8 @@ Kampung Digital (nama sementara): portal web + (nanti) aplikasi mobile yang meng
 
 ## Ruang lingkup saat ini
 
-Sudah ada: sistem rilis aplikasi dan update wajib, laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
-Berikutnya (Tahap 2, rencana rinci di `docs/RENCANA-TAHAP-2.md`; perbarui centangnya saat mengerjakan): login OTP untuk warga, pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
+Sudah ada: login warga dengan kode undangan + data warga (Fase B), sistem rilis aplikasi dan update wajib, laporan warga (form publik + penanganan di admin), panel admin (usaha, pengumuman, agenda), beranda, direktori usaha (pencarian, kategori, detail, tombol WhatsApp), API baca, migrasi dan seed, aplikasi Flutter awal, unit test, CI GitHub Actions.
+Berikutnya (Tahap 2, rencana rinci di `docs/RENCANA-TAHAP-2.md`; perbarui centangnya saat mengerjakan): chat saluran dan grup (Fase C), pendaftaran usaha oleh warga, unggah foto, edit jam buka, pembatasan percobaan login, notifikasi, pengembangan lanjut aplikasi Flutter.
 Ditunda: pembayaran online, chat dalam aplikasi, iuran, surat pengantar, bank sampah.
 
 ## Catatan keputusan
@@ -84,3 +84,7 @@ Tambahkan keputusan penting di bawah ini (tanggal, keputusan, alasan singkat).
 - 2026-11-27: Tema visual "Jakarta" (siluet kota senja) pada hero dan login; aset di `public/jakarta-skyline.svg`, warna merek tetap hijau.
 - 2026-11-27: Update wajib aplikasi: server menyimpan daftar rilis (`app_releases`, tingkat platform tanpa `community_id`, hanya `super_admin`); klien mengirim `platform` dan nomor build, server menjawab rilis aktif terbaru dan apakah ada rilis wajib di atas build klien. Klien gagal-terbuka (jika pengecekan error, aplikasi tetap jalan) dan melewati pengecekan pada build 0 (pengembangan). Nomor build = nomor run GitHub Actions. File APK tidak disimpan di server: admin mengisi tautan https unduhan.
 - 2026-11-27: Update Android hanya bisa terpasang bila APK memakai kunci tanda tangan yang sama; kunci rilis tetap disuntik di CI lewat GitHub Secrets. iOS butuh TestFlight/App Store (akun Apple Developer) untuk distribusi ke pengguna.
+- 2026-11-27: Login warga memakai **kode undangan dari pengurus + nomor HP + sandi** (bukan OTP; tanpa layanan pihak ketiga). Warga yang mendaftar dengan kode otomatis menjadi anggota aktif; pengurus bisa menangguhkan. Nomor HP belum diverifikasi (tidak ada OTP), jadi jangan dianggap bukti kepemilikan nomor.
+- 2026-11-27: Data warga minimal (nama, nomor HP, blok/jalan, nomor rumah, RT/RW); tanpa NIK/KK. Hanya pengurus yang melihat nomor HP, dan setiap pembukaan detail dicatat di `audit_logs` (`resident.view`). Warga lain hanya (nanti) melihat nama + blok bila `show_in_directory`.
+- 2026-11-27: Pembatasan percobaan login memakai tabel `auth_attempts` (hash kunci, tanpa state di server). Catatan lama belum dibersihkan otomatis; tambahkan pembersihan berkala (dengan persetujuan) bila tabel membesar.
+- 2026-11-27: Hapus akun warga = anonimisasi (nama/nomor dikosongkan, profil alamat dihapus, keanggotaan ditangguhkan, `users.deleted_at` diisi); baris `users` tetap ada agar relasi lama tidak rusak. Akun `admin_lingkungan`/`super_admin` tidak bisa menghapus diri sendiri.

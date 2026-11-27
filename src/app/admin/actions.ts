@@ -24,6 +24,26 @@ import { endSession, isAuthConfigured, loadAdmin, requireAdmin, requireSuperAdmi
 import { getDb } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { getCurrentCommunity } from "@/lib/queries";
+import { clientIp } from "@/lib/request";
+import {
+  MEMBER_ROLES,
+  THROTTLE,
+  THROTTLE_ERROR,
+  canChangeRoles,
+  canManageMember,
+  isThrottled,
+  parseInviteCreate,
+  type MemberRole,
+} from "@/lib/resident";
+import {
+  adminGetResident,
+  countFailures,
+  createInvite,
+  recordFailure,
+  setInviteActive,
+  setMemberRole,
+  setMemberStatus,
+} from "@/lib/resident-queries";
 import { PUBLISH_STATUSES, REPORT_STATUSES, isUuid, parseAnnouncement, parseBusiness, parseEvent, parseRelease } from "@/lib/validation";
 
 export type FormState = { errors: string[] } | null;
@@ -47,6 +67,12 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   if (!email || !password) return fail;
 
   try {
+    const ip = await clientIp();
+    const accountFails = await countFailures("admin-login-akun", email, THROTTLE.windowMinutes);
+    const ipFails = ip ? await countFailures("admin-login-ip", ip, THROTTLE.windowMinutes) : 0;
+    if (isThrottled(accountFails, THROTTLE.accountMax) || isThrottled(ipFails, THROTTLE.ipMax)) {
+      return { errors: [THROTTLE_ERROR] };
+    }
     const sql = getDb();
     const rows = await sql<{ id: string; password_hash: string | null }[]>`
       select id, password_hash from users where email = ${email} and deleted_at is null limit 1`;
@@ -55,6 +81,8 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     dummyHash ??= hashPassword("tidak-dipakai");
     const valid = verifyPassword(password, user?.password_hash ?? dummyHash) && Boolean(user?.password_hash);
     if (!user || !valid) {
+      await recordFailure("admin-login-akun", email);
+      if (ip) await recordFailure("admin-login-ip", ip);
       await sleep(500);
       return fail;
     }
@@ -117,6 +145,60 @@ export async function deleteBusinessAction(id: string): Promise<void> {
   if (!(await softDeleteBusiness(community.id, id))) notFound();
   await writeAudit(community.id, user.id, "business.delete", "business", id);
   redirect("/admin/usaha?pesan=dihapus");
+}
+
+// ---------- Data warga dan kode undangan ----------
+
+async function loadManageable(communityId: string, actor: { id: string; role: "super_admin" | "admin_lingkungan" | "pengurus" }, userId: string) {
+  requireId(userId);
+  const target = await adminGetResident(communityId, userId);
+  if (!target) notFound();
+  if (!canManageMember(actor, { id: target.user_id, role: target.role, platform_role: target.platform_role })) {
+    redirect(`/admin/warga/${userId}?pesan=ditolak`);
+  }
+  return target;
+}
+
+export async function setMemberStatusAction(userId: string, status: "active" | "suspended"): Promise<void> {
+  const { user, community, role } = await requireAdmin();
+  if (status !== "active" && status !== "suspended") notFound();
+  await loadManageable(community.id, { id: user.id, role }, userId);
+  await setMemberStatus(community.id, userId, status);
+  await writeAudit(community.id, user.id, "member.status", "user", userId, { status });
+  redirect(`/admin/warga/${userId}?pesan=tersimpan`);
+}
+
+export async function setMemberRoleAction(userId: string, formData: FormData): Promise<void> {
+  const { user, community, role } = await requireAdmin();
+  const newRole = String(formData.get("role") ?? "");
+  if (!(MEMBER_ROLES as readonly string[]).includes(newRole)) notFound();
+  if (!canChangeRoles(role)) redirect(`/admin/warga/${userId}?pesan=ditolak`);
+  await loadManageable(community.id, { id: user.id, role }, userId);
+  await setMemberRole(community.id, userId, newRole as MemberRole);
+  await writeAudit(community.id, user.id, "member.role", "user", userId, { role: newRole });
+  redirect(`/admin/warga/${userId}?pesan=tersimpan`);
+}
+
+export async function createInviteAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { user, community } = await requireAdmin();
+  const parsed = parseInviteCreate(formData);
+  if (!parsed.ok) return { errors: parsed.errors };
+  try {
+    const invite = await createInvite(community.id, user.id, parsed.value);
+    await writeAudit(community.id, user.id, "invite.create", "invite_code", invite.id, { label: parsed.value.label ?? "" });
+  } catch (err) {
+    console.error(err);
+    return { errors: [GENERIC_ERROR] };
+  }
+  redirect("/admin/undangan?pesan=dibuat");
+}
+
+export async function setInviteActiveAction(id: string, active: boolean): Promise<void> {
+  const { user, community } = await requireAdmin();
+  requireId(id);
+  if (!(await setInviteActive(community.id, id, active))) notFound();
+  await writeAudit(community.id, user.id, "invite.active", "invite_code", id, { active: String(active) });
+  redirect("/admin/undangan?pesan=tersimpan");
 }
 
 // ---------- Rilis aplikasi (khusus super_admin) ----------

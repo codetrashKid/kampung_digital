@@ -2,11 +2,11 @@
 
 export type Result<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
-type Getter = { get(name: string): FormDataEntryValue | null };
+export type Getter = { get(name: string): FormDataEntryValue | null };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function text(g: Getter, name: string): string {
+export function text(g: Getter, name: string): string {
   const v = g.get(name);
   return typeof v === "string" ? v.trim() : "";
 }
@@ -52,14 +52,14 @@ export function toLocalDateTimeValue(d: Date | string | null): string {
   return new Date(date.getTime() + 7 * 3600_000).toISOString().slice(0, 16);
 }
 
-function lengthError(label: string, value: string, min: number, max: number): string | null {
+export function lengthError(label: string, value: string, min: number, max: number): string | null {
   if (value.length === 0 && min > 0) return `${label} wajib diisi.`;
   if (value.length < min) return `${label} minimal ${min} karakter.`;
   if (value.length > max) return `${label} maksimal ${max} karakter.`;
   return null;
 }
 
-function collect(errors: (string | null)[]): string[] {
+export function collect(errors: (string | null)[]): string[] {
   return errors.filter((e): e is string => e !== null);
 }
 

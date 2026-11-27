@@ -13,6 +13,7 @@ Portal web (dan nanti aplikasi mobile) yang menghubungkan warga dengan usaha dan
 - API JSON `/api/v1/businesses`, `/api/v1/health`, dan `/api/v1/app-version` (cek versi/update wajib), dipakai aplikasi Flutter
 - **Panel admin (CMS)** di `/admin`: kelola usaha, pengumuman, agenda, dan laporan warga
 - **Laporan warga**: warga melapor di `/lapor` tanpa login, pengurus menindaklanjuti di panel, dan laporan yang disetujui tampil di `/laporan`
+- **Akun warga dengan kode undangan**, data warga, dan pembatasan percobaan login
 - **Sistem rilis aplikasi**: pengecekan versi, update wajib/opsional, dikelola dari panel admin
 - Tema visual Jakarta (siluet kota senja dengan Monas)
 - Aplikasi mobile Flutter (Android dan iOS): cari usaha, lihat detail, pesan via WhatsApp
@@ -110,6 +111,15 @@ keytool -genkey -v -keystore release.jks -alias kampung -keyalg RSA -keysize 204
 # macOS/Linux: base64 -w0 release.jks
 ```
 Di GitHub: Settings > Secrets and variables > Actions > **Secrets**, tambahkan `ANDROID_KEYSTORE_BASE64` (isi base64 tadi), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`kampung`), dan `ANDROID_KEY_PASSWORD`. **Jangan commit `release.jks`.** Memasang APK dari tautan di luar Play Store juga mengharuskan pengguna mengizinkan "pasang aplikasi dari sumber tidak dikenal".
+
+## Warga: kode undangan dan akun
+
+Warga mendaftar sendiri di `/daftar` memakai **kode undangan** dari pengurus, lalu masuk di `/masuk` dengan nomor HP dan sandi. Alurnya:
+1. Pengurus membuka **Panel Admin > Kode undangan**, membuat kode (opsional: label, batas pemakaian, masa berlaku), lalu membagikan kode atau tautannya (mis. di grup WhatsApp RT).
+2. Warga membuka tautan `/daftar?kode=...`, mengisi nama, nomor HP, sandi, alamat (blok, nomor rumah, RT/RW), dan menyetujui penggunaan data. Mereka langsung menjadi anggota aktif.
+3. Di `/akun` warga mengubah data, mengganti sandi, atau menghapus akun. Pengurus mengelola warga di **Data warga** (tangguhkan, ubah peran).
+
+Keamanan dan privasi: sandi di-hash; percobaan login dan tebak kode dibatasi; hanya pengurus yang melihat nomor HP dan setiap pembukaan dicatat; nomor HP belum diverifikasi (tidak ada OTP); lihat [/privasi](src/app/(public)/privasi/page.tsx) (draf, perlu ditinjau). Belum ada: atur ulang sandi oleh pengurus, direktori warga, dan ekspor data.
 
 ## Panel admin (CMS)
 

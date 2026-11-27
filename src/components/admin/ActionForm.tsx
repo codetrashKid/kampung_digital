@@ -8,6 +8,7 @@ type Props = {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
   cancelHref: string;
+  cancelLabel?: string;
   children: React.ReactNode;
 };
 
@@ -16,13 +17,13 @@ type Props = {
  * React 19 mengosongkan form setelah aksi selesai; bila ada error, isian (kecuali sandi) dipulihkan
  * agar pengguna tidak perlu mengetik ulang.
  */
-export default function ActionForm({ action, submitLabel, cancelHref, children }: Props) {
+export default function ActionForm({ action, submitLabel, cancelHref, cancelLabel = "Batal", children }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const submitted = useRef<[string, string][]>([]);
 
   const wrapped = async (prev: FormState, formData: FormData): Promise<FormState> => {
     submitted.current = [...formData.entries()].filter(
-      (e): e is [string, string] => typeof e[1] === "string" && e[0] !== "password" && !e[0].startsWith("$ACTION"),
+      (e): e is [string, string] => typeof e[1] === "string" && !e[0].toLowerCase().includes("password") && !e[0].startsWith("$ACTION"),
     );
     return action(prev, formData);
   };
@@ -33,7 +34,7 @@ export default function ActionForm({ action, submitLabel, cancelHref, children }
     const sent = new Map(submitted.current);
     for (const el of Array.from(formRef.current.elements)) {
       if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) continue;
-      if (!el.name || el.name === "password") continue;
+      if (!el.name || (el instanceof HTMLInputElement && el.type === "password")) continue;
       if (el instanceof HTMLInputElement && el.type === "checkbox") {
         el.checked = sent.has(el.name); // kotak yang tidak dicentang tidak ikut terkirim
       } else if (sent.has(el.name)) {
@@ -54,7 +55,7 @@ export default function ActionForm({ action, submitLabel, cancelHref, children }
         <button type="submit" className="btn" disabled={pending}>
           {pending ? "Menyimpan…" : submitLabel}
         </button>
-        <Link href={cancelHref} className="btn btn-light">Batal</Link>
+        <Link href={cancelHref} className="btn btn-light">{cancelLabel}</Link>
       </div>
     </form>
   );
