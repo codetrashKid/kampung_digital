@@ -17,6 +17,20 @@ ApiClient _clientWith(MockClientHandler handler) =>
     ApiClient(baseUrl: 'http://test', httpClient: MockClient(handler));
 
 void main() {
+  test('baseUrl berakhiran garis miring tidak menghasilkan // di alamat', () async {
+    late Uri captured;
+    final api = ApiClient(
+      baseUrl: ' https://contoh.vercel.app// ',
+      httpClient: MockClient((req) async {
+        captured = req.url;
+        return http.Response(jsonEncode({'data': []}), 200);
+      }),
+    );
+    await api.listBusinesses();
+    expect(api.baseUrl, 'https://contoh.vercel.app');
+    expect(captured.toString(), startsWith('https://contoh.vercel.app/api/v1/businesses'));
+  });
+
   test('mengambil daftar usaha dan mengirim parameter yang benar', () async {
     late Uri captured;
     final api = _clientWith((req) async {

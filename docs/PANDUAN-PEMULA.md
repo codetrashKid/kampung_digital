@@ -54,10 +54,12 @@ Cek juga **http://localhost:3000/api/v1/health**: jika berisi `"database":"terhu
 1. Buat repositori di GitHub dan unggah proyek ini (`git init`, `git add .`, `git commit`, `git push`). Pastikan `.env.local` **tidak** ikut terunggah (sudah dicegah oleh `.gitignore`).
 2. Daftar di [vercel.com](https://vercel.com) memakai akun GitHub.
 3. Klik **Add New → Project**, pilih repositori ini, biarkan pengaturan bawaan (Next.js terdeteksi otomatis).
-4. Buka **Environment Variables**, tambahkan:
-   - `DATABASE_URL` = connection string database Anda
-   - `DEFAULT_COMMUNITY_SLUG` = `contoh-kampung` (atau slug lingkungan Anda)
-5. Klik **Deploy**. Setelah selesai Anda mendapat alamat seperti `nama-proyek.vercel.app`.
+4. Buka **Environment Variables** dan tambahkan tiga variabel ini (centang Production dan Preview):
+   - `DATABASE_URL`: connection string database (Supabase: Transaction pooler, port 6543; sandi dengan karakter khusus harus di-URL-encode, mis. `%` menjadi `%25`).
+   - `DEFAULT_COMMUNITY_SLUG`: mis. `contoh-kampung`.
+   - `AUTH_SECRET`: kunci acak baru minimal 32 karakter (buat dengan `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Tanpa ini halaman login admin menampilkan peringatan.
+5. Klik **Deploy**. Setelah selesai Anda mendapat alamat seperti `nama-proyek.vercel.app`. Cek `https://nama-proyek.vercel.app/api/v1/health`; isinya harus `"database":"terhubung"`.
+6. Untuk aplikasi mobile, isi variabel repositori GitHub `API_BASE_URL` dengan alamat itu (lihat README, bagian Aplikasi mobile).
 
 Setiap kali Anda `git push` ke cabang utama, Vercel otomatis men-deploy ulang.
 

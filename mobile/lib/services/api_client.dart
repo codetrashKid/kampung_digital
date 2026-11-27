@@ -15,8 +15,10 @@ class ApiException implements Exception {
 
 /// Klien API Kampung Digital (`/api/v1`). Logika bisnis ada di server.
 class ApiClient {
-  ApiClient({required this.baseUrl, http.Client? httpClient})
-      : _http = httpClient ?? http.Client();
+  /// [baseUrl] boleh berakhiran `/` (mis. dari salinan URL Vercel); garis miring di ujung dibuang.
+  ApiClient({required String baseUrl, http.Client? httpClient})
+      : baseUrl = baseUrl.trim().replaceAll(RegExp(r'/+$'), ''),
+        _http = httpClient ?? http.Client();
 
   final String baseUrl;
   final http.Client _http;

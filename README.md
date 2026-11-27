@@ -112,9 +112,18 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000   # emulator Android
 
 ## Deploy gratis
 
-1. Buat database gratis (Neon atau Supabase), jalankan `npm run db:migrate` dari komputer Anda dengan `DATABASE_URL` database tersebut.
-2. Push repositori ke GitHub, lalu impor di Vercel.
-3. Isi Environment Variables `DATABASE_URL` dan `DEFAULT_COMMUNITY_SLUG`, lalu Deploy.
+1. Buat database gratis (Neon atau Supabase), jalankan `npm run db:migrate` (dan `npm run admin:create`) dari komputer Anda dengan `DATABASE_URL` database tersebut.
+2. Push repositori ke GitHub, lalu impor di Vercel (Framework otomatis terdeteksi Next.js, Root Directory dibiarkan `./`).
+3. Isi **Environment Variables** di Vercel (Settings > Environment Variables, centang Production dan Preview):
+
+| Variabel | Nilai |
+|---|---|
+| `DATABASE_URL` | Connection string database. Supabase: **Transaction pooler** (port 6543), sandi di-URL-encode |
+| `DEFAULT_COMMUNITY_SLUG` | Slug lingkungan, mis. `contoh-kampung` |
+| `AUTH_SECRET` | Kunci acak minimal 32 karakter, **buat yang baru untuk produksi** (jangan pakai milik lokal) |
+
+4. Klik Deploy. `vercel.json` sudah mengatur region fungsi ke Tokyo (`hnd1`) agar dekat dengan database Supabase di `ap-northeast-1`; ubah bila database Anda di region lain.
+5. Setelah dapat alamat `https://nama-proyek.vercel.app`, isi variabel repositori GitHub **`API_BASE_URL`** dengan alamat itu (tanpa `/api/v1`) agar build aplikasi mobile menunjuk ke sana. Cek dulu `https://nama-proyek.vercel.app/api/v1/health`.
 
 Rinciannya ada di [docs/PANDUAN-PEMULA.md](docs/PANDUAN-PEMULA.md). Cek ketentuan terbaru masing-masing layanan, karena paket gratis punya batas dan syarat penggunaan.
 

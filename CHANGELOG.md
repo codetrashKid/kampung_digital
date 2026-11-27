@@ -23,6 +23,8 @@ Kategori: `Ditambahkan`, `Diubah`, `Diperbaiki`, `Dihapus`, `Keamanan`.
 - Unit test baru: sandi, sesi, validasi, otorisasi, format (total 62 tes web).
 
 ### Diubah
+- Deploy: `vercel.json` (region fungsi `hnd1`/Tokyo, dekat database Supabase), panduan environment variable Vercel (`DATABASE_URL`, `DEFAULT_COMMUNITY_SLUG`, `AUTH_SECRET`) di README dan panduan pemula.
+- Mobile: `ApiClient` membuang garis miring di akhir `API_BASE_URL` (mencegah alamat `//api/v1`), disertai tes.
 - Mobile: impor `package:flutter/material.dart` diganti `package:material_ui/material_ui.dart` (paket `material_ui ^1.11.1` ditambahkan) karena `material.dart` dinyatakan deprecated di Flutter 3.50 dan membuat `flutter analyze` gagal di CI. SDK minimum mobile naik ke Dart 3.13 (Flutter 3.47+). Belum diverifikasi: Flutter tidak terpasang di mesin ini, jadi hasilnya baru terlihat di CI.
 - Tampilan portal didesain ulang: header, hero dengan pencarian, kategori, kartu usaha dengan avatar, kotak tanggal agenda, halaman detail dua kolom, jam buka menandai hari ini, ukuran teks dan tombol lebih besar.
 - Halaman publik dipindah ke route group `src/app/(public)/` agar panel admin punya kerangka tampilan sendiri (URL tidak berubah).
